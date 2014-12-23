@@ -9,6 +9,8 @@ import Data.Aeson.Lens
 import Network.Wreq
 import Control.Lens
 import Data.Text.Encoding (encodeUtf8)
+import Control.Monad (mzero)
+import Control.Applicative ((<*>), (<$>))
 
 -- type Resp = Response (Map String Value)
 
@@ -17,18 +19,21 @@ projectID = "53f691bd45d4960005000082"
 server = "mq-aws-us-east-1.iron.io"
 apiVersion = "1"
 
--- data QueueSummary = QueueSummary {
---         id :: String,
---         project_id :: String,
---         name :: String
--- } deriving (Show, Generic)
+baseurl = concat ["https://", server, "/", apiVersion, "/projects/", projectID]
+opts = defaults & header "Content-Type" .~ ["application/json"]
+
+data QueueSummary = QueueSummary {
+        q_id :: String,
+        q_project_id :: String,
+        q_name :: String
+} deriving (Show)
 
 data Queue = Queue {
         id :: String,
         project_id :: String,
         name :: String,
-        size :: Int,
-        total_messages :: Int
+        size :: Maybe Int,
+        total_messages :: Maybe Int
 } deriving (Show, Generic)
 
 getJSON ::FromJSON a => String -> IO a
@@ -38,22 +43,13 @@ getJSON s = do
     response <- asJSON =<< getWith getOpts url
     return (response ^. responseBody)
 
--- instance FromJSON QueueSummary
 instance FromJSON Queue
 
-baseurl = concat ["https://", server, "/", apiVersion, "/projects/", projectID]
-opts = defaults & header "Content-Type" .~ ["application/json"]
+getQueues :: IO [Queue]
+getQueues = getJSON "/queues"
 
-
--- getQueues = let url = concat [baseurl, "/queues"]
---                 getOpts = opts & param "oauth" .~ [token] in do
---                 response <- asJSON =<< getWith getOpts url :: IO (Response [QueueSummary])
---                 return (response ^. responseBody)
-
-getQueue queueName = let url = concat [baseurl, "/queues/", queueName]
-                         getOpts = opts & param "oauth" .~ [token] in do
-                         response <- asJSON =<< getWith getOpts url :: IO (Response Queue)
-                         return (response ^. responseBody)
+getQueue :: String -> IO Queue
+getQueue queueName = getJSON ("/queues/" ++ queueName)
 
 clear queue = undefined
 
@@ -94,9 +90,7 @@ deletMessagePushStatus queue messageID = undefined
 queues = undefined
 
 
-main = do
-        queue <- getQueue "whack"
-        print $ name queue
+main = getQueue "default"
 
 -- makeRequest method endpoint body =
 --     let url = concat ["https://", server, "/", apiVersion, "/projects/", projectID, endpoint]
