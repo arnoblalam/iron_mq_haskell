@@ -18,7 +18,7 @@ cabal install iron-mq
 
 Create a client which stores your authentication information and server settings/
 
-```
+```haskell
 client = Client {
     server="mq-aws-us-east-1.iron.io",
     porjectID="500f7b....b0f302e9",
