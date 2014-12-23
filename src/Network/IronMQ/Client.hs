@@ -48,11 +48,7 @@ data MessageList = MessageList {
 } deriving (Show, Generic)
 
 instance FromJSON Queue
-instance FromJSON PushStatus where
-        parseJSON (emptyObject) = Nothing
-        parseJSON (Object v) = Just PushStatus <$>
-                v .: "retries_remaining"
-        parseJSON _ = mzero
+instance FromJSON PushStatus
 instance FromJSON Message where
         parseJSON (Object v) = Message <$>
                 v .: "id" <*>
