@@ -24,58 +24,75 @@ getJSON ::FromJSON a => Client -> String -> IO a
 getJSON client s = getJSONWithOpts client s []
 
 -- | Get a list of queues available to the client
-getQueues :: Client -> IO [QueueSummary]
-getQueues client = getJSON client "/queues"
+queues :: Client -> IO [QueueSummary]
+queues client = getJSON client "/queues"
 
--- | Get information about a queue from a client
-getQueue :: Client -> String -> IO Queue
-getQueue client queueName = getJSON client ("/queues/" ++ queueName)
+-- | Get a queue from the client
+queue :: Client -> String -> IO Queue
+queue client queueName = getJSON client ("/queues/" ++ queueName)
 
--- | Get a list of messages from the Client
+-- | Get a list of messages on a queue
 getMessages :: Client -> String -> IO MessageList
 getMessages client queueName = getJSON client ("/queues/" ++ queueName ++ "/messages")
 
 getMessageById :: Client -> String -> String -> IO Message
 getMessageById client queueName messageID = getJSON client ("/queues/" ++ queueName ++ "/messages/" ++ messageID)
 
+-- | Get the push status of a message
 getMessagePushStatuses :: Client -> String -> String -> IO PushStatus
-getMessagePushStatuses client queue messageID = undefined
+getMessagePushStatuses client queueName messageID = undefined
 
+-- | Post messages to a queue
 postMessages :: Client -> String -> MessageList -> IO IronResponse
 postMessages client queue messageList = undefined
 
+-- | Clear all messages from a queue
 clear :: Client -> String -> IO IronResponse
-clear client queue = undefined
+clear client queueName = undefined
 
+-- | Delete a queue
+deleteQueue :: Client -> String -> IO IronResponse
+deleteQueue client queueName = undefined
+
+-- | Delete a message from a queue
 deleteMessage :: Client -> String -> String -> IO IronResponse
-deleteMessage client queue messageID = undefined
+deleteMessage client queueName messageID = undefined
 
+-- | Delete several messages from a queue
 deleteMessages :: Client -> String -> [String] -> IO IronResponse
-deleteMessages client queue meessageIDs = undefined
+deleteMessages client queueName meessageIDs = undefined
 
+-- | Delete the message push status of a message
+deleteMessagePushStatus :: String -> String -> IO IronResponse
+deleteMessagePushStatus queueName messageID = undefined
+
+-- | Remove alerts from a queue
+deleteAlerts :: Client -> String -> [String] -> IO IronResponse
+deleteAlerts client queueName alertIDs = undefined
+
+-- | Remove an alert from a queue
+deleteAlert :: Client -> String -> String -> IO IronResponse
+deleteAlert client queueName alertID = undefined
+
+-- Remove subscribers from a queue
+deleteSubscribers client queueName subscribers = undefined
+
+-- | Take a look at the next item on the queue
 peek :: Client -> String -> IO IronResponse
-peek client queue = undefined
+peek client queueName = undefined
 
+-- | Touch a message on the queue
 touch :: Client -> String -> String -> IO IronResponse
-touch client queue messageID = undefined
+touch client queueName messageID = undefined
 
+-- | Update a
+update client queueName subscribers = undefined
 
-update client queue subscribers = undefined
+-- | Add alerts to a queue
+addAlerts client queueName alerts = undefined
 
-deleteQueue client queue = undefined
+-- | Update alerts on a queue
+updateAlerts client queueName alerts = undefined
 
-addAlerts client queue alerts = undefined
-
-updateAlerts client queue alerts = undefined
-
-removeAlerts client queue alertID = undefined
-
-removeAlert client queue alertID = undefined
-
-addSubsrubers client queue subscribers = undefined
-
-removeSubscribers client queue subscribers = undefined
-
-deletMessagePushStatus queue messageID = undefined
-
-queues = undefined
+-- | Add subscribers to a queue
+addSubsrubers client queueName subscribers = undefined
