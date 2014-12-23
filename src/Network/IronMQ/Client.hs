@@ -11,6 +11,7 @@ import Control.Lens
 import Data.Text.Encoding (encodeUtf8)
 import Control.Monad (mzero)
 import Control.Applicative ((<*>), (<$>))
+import qualified Data.Text as T
 
 -- type Resp = Response (Map String Value)
 
@@ -22,12 +23,6 @@ apiVersion = "1"
 baseurl = concat ["https://", server, "/", apiVersion, "/projects/", projectID]
 opts = defaults & header "Content-Type" .~ ["application/json"]
 
-data QueueSummary = QueueSummary {
-        q_id :: String,
-        q_project_id :: String,
-        q_name :: String
-} deriving (Show)
-
 data Queue = Queue {
         id :: String,
         project_id :: String,
@@ -36,6 +31,39 @@ data Queue = Queue {
         total_messages :: Maybe Int
 } deriving (Show, Generic)
 
+data PushStatus = PushStatus {
+        retries_remaining :: Int
+} deriving (Show, Generic)
+
+data Message = Message {
+        m_id :: String,
+        body :: T.Text,
+        timeout :: Int,
+        reserved_count :: Int,
+        push_status :: Maybe PushStatus
+} deriving (Show, Generic)
+
+data MessageList = MessageList {
+        messages :: [Message]
+} deriving (Show, Generic)
+
+instance FromJSON Queue
+instance FromJSON PushStatus where
+        parseJSON (emptyObject) = Nothing
+        parseJSON (Object v) = Just PushStatus <$>
+                v .: "retries_remaining"
+        parseJSON _ = mzero
+instance FromJSON Message where
+        parseJSON (Object v) = Message <$>
+                v .: "id" <*>
+                v .: "body" <*>
+                v .: "timeout" <*>
+                v .: "reserved_count" <*>
+                v .:? "push_status"
+        parseJSON _ = mzero
+
+instance FromJSON MessageList
+
 getJSON ::FromJSON a => String -> IO a
 getJSON s = do
     let url = baseurl ++ s
@@ -43,25 +71,26 @@ getJSON s = do
     response <- asJSON =<< getWith getOpts url
     return (response ^. responseBody)
 
-instance FromJSON Queue
-
 getQueues :: IO [Queue]
 getQueues = getJSON "/queues"
 
 getQueue :: String -> IO Queue
 getQueue queueName = getJSON ("/queues/" ++ queueName)
 
+getMessages :: String -> IO MessageList
+getMessages queueName = getJSON ("/queues/" ++ queueName ++ "/messages")
+
+getMessageById queue messageID = undefined
+
+getMessagePushStatuses queue messageID = undefined
+
+postMessages queue messages = undefined
+
 clear queue = undefined
 
 deleteMessage queue messageID = undefined
 
 deleteMessages queue meessageIDs = undefined
-
-postMessages queue messages = undefined
-
-getMessage queue = undefined
-
-getMessageById queue messageID = undefined
 
 peek queue = undefined
 
@@ -83,14 +112,12 @@ addSubsrubers queue subscribers = undefined
 
 removeSubscribers queue subscribers = undefined
 
-getMessagePushStatuses queue messageID = undefined
-
 deletMessagePushStatus queue messageID = undefined
 
 queues = undefined
 
 
-main = getQueue "default"
+main = getMessages "default"
 
 -- makeRequest method endpoint body =
 --     let url = concat ["https://", server, "/", apiVersion, "/projects/", projectID, endpoint]
