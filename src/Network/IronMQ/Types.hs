@@ -11,15 +11,15 @@ import Data.Text (Text)
 
 data Client = Client {
     token :: Text,
-    projectID :: String,
-    server :: String,
-    apiVersion :: String
+    projectID :: Text,
+    server :: Text,
+    apiVersion :: Text
 }
 
 data QueueSummary = QueueSummary {
-        qsId :: String,
-        qsProjectId :: String,
-        qsName :: String
+        qsId :: Text,
+        qsProjectId :: Text,
+        qsName :: Text
 } deriving (Show)
 
 instance FromJSON QueueSummary where
@@ -28,23 +28,37 @@ instance FromJSON QueueSummary where
                 v .: "project_id" <*>
                 v .: "name"
         parseJSON _ = mzero
-data Subscribers = Subscribers {
-    url :: String,
-    headers :: String
+
+
+data Subscriber = Subscriber {
+    sUrl :: Text,
+    sHeaders :: Maybe Text,
+    sRetriesRemaining :: Maybe Int,
+    sStatusCode :: Maybe Int,
+    sStatus :: Maybe Text,
+    sId :: Maybe Text
 } deriving (Show, Generic)
 
-instance FromJSON Subscribers
+instance FromJSON Subscriber where
+    parseJSON (Object v) = Subscriber <$>
+        v .: "url" <*>
+        v .:? "headers" <*>
+        v .:? "retries_remaining" <*>
+        v .:? "status_code" <*>
+        v .:? "status" <*>
+        v .:? "id"
+    parseJSON _ = mzero
 
 
 data Queue = Queue {
-        qId :: Maybe String,
-        qProjectId :: String,
-        qName :: String,
+        qId :: Maybe Text,
+        qProjectId :: Text,
+        qName :: Text,
         qSize :: Maybe Int,
         qTotalMessages :: Maybe Int,
-        qSubscribers :: Maybe Subscribers,
+        qSubscribers :: Maybe [Subscriber],
         qRetries :: Maybe Int,
-        qPushType :: Maybe String,
+        qPushType :: Maybe Text,
         qRetriesDelay :: Maybe Int
 } deriving (Show)
 
@@ -71,16 +85,16 @@ instance FromJSON QueueInfo where
         parseJSON _ = mzero
 
 data PushStatus = PushStatus {
-        retriesRemaining :: Int
+    psSubscribers :: [Subscriber]
 } deriving (Show)
 
 instance FromJSON PushStatus where
         parseJSON (Object v) = PushStatus <$>
-                v .: "retries_remaining"
+                v .: "subscribers"
         parseJSON _ = mzero
 
 data Message = Message {
-        mId :: Maybe String,
+        mId :: Maybe Text,
         mBody :: Text,
         mTimeout :: Maybe Int,
         mReservedCount :: Maybe Int
@@ -105,8 +119,8 @@ instance FromJSON MessageList
 instance ToJSON MessageList
 
 data IronResponse = IronResponse {
-        ids :: Maybe String,
-        msg :: String
+        ids :: Maybe Text,
+        msg :: Text
 } deriving (Show, Generic)
 
 instance FromJSON IronResponse

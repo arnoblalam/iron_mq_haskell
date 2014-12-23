@@ -5,39 +5,38 @@ import Network.Wreq
 import Network.Wreq.Types (Postable)
 import Control.Lens
 import Data.Aeson (FromJSON)
-import Data.Text (Text, append)
+import Data.Text (Text, append, unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.IronMQ.Types
-import Control.Monad (liftM)
 import Network.HTTP.Client (RequestBody(..))
 
 
 -- | Some convenient type synonyms to help keel track of things
 
-type Url = String
-type Endpoint = String
+type Url = Text
+type Endpoint = Text
 type Param = (Text, Text)
-type QueueName = String
-type ID = String -- could be a message ID, subscriber ID or whatever
+type QueueName = Text
+type ID = Text -- could be a message ID, subscriber ID or whatever
 
 -- | Some convenience functions to make HTTP requests easier
 
 -- | Construct a base URL for HTTP requests from a client
-baseurl :: Client -> Url
-baseurl client = concat ["https://", server client, "/", apiVersion client,
-                            "/projects/", projectID client]
-
+-- baseurl :: Client -> Text
+baseurl client = "https://" `append` server client `append` "/" `append` apiVersion client
+                            `append` "/projects/" `append` projectID client
 -- | An empty body for POST/PUT requests
+emptyBody :: Payload
 emptyBody = Raw "application/json" $ RequestBodyLBS ""
 
 -- | Make a GET request to an endpoint using connection info from client and
 -- query string set to parameters. Return the JSON results
 getJSONWithOpts :: FromJSON a => Client -> Endpoint -> [Param] -> IO a
 getJSONWithOpts client endpoint parameters = do
-    let url = baseurl client ++ endpoint
+    let url = baseurl client `append` endpoint
         getOpts = defaults & header "Content-Type" .~ ["application/json"]
                            & params .~ ("oauth", token client) : parameters
-    response <- asJSON =<< getWith getOpts url
+    response <- asJSON =<< getWith getOpts (unpack url)
     return (response ^. responseBody)
 
 -- | Make a GET request to an endpoint using the connection info from client.
@@ -49,10 +48,10 @@ getJSON client s = getJSONWithOpts client s []
 -- and the body provided. Return the JSON response.
 postJSONWithBody :: (Postable a, FromJSON b) => Client -> Endpoint -> a -> IO b
 postJSONWithBody client endpoint body = do
-    let url = baseurl client ++ endpoint
+    let url = baseurl client `append` endpoint
         postOpts = defaults & header "Authorization" .~
             [encodeUtf8 ("OAuth " `append` token client)]
-    response <- asJSON =<< postWith postOpts url body
+    response <- asJSON =<< postWith postOpts (unpack url) body
     return (response ^. responseBody)
 
 -- | Make a POST request to an endpoint using the connection into from client
@@ -66,20 +65,20 @@ queues client = getJSON client "/queues"
 
 -- | Get a queue from the client
 getQueue :: Client -> QueueName -> IO Queue
-getQueue client queueName = getJSON client ("/queues/" ++ queueName)
+getQueue client queueName = getJSON client ("/queues/" `append` queueName)
 
 -- | Get a list of messages on a queue
 getMessages :: Client -> QueueName -> IO MessageList
 getMessages client queueName = getJSON client
-    ("/queues/" ++ queueName ++ "/messages")
+    ("/queues/" `append` queueName `append` "/messages")
 
 getMessageById :: Client -> QueueName -> ID -> IO Message
 getMessageById client queueName messageID = getJSON client
-    ("/queues/" ++ queueName ++ "/messages/" ++ messageID)
+    ("/queues/" `append` queueName `append` "/messages/" `append` messageID)
 
 -- | Get the push status of a message
-getMessagePushStatuses :: Client -> QueueName -> ID -> IO PushStatus
-getMessagePushStatuses client queueName messageID = undefined
+getMessagePushStatus :: Client -> QueueName -> ID -> IO PushStatus
+getMessagePushStatus client queueName messageID = undefined
 
 -- | Post messages to a queue
 postMessages :: Client -> QueueName -> MessageList -> IO IronResponse
@@ -87,8 +86,9 @@ postMessages client queueName messageList = undefined
 
 -- | Clear all messages from a queue
 clear :: Client -> QueueName -> IO IronResponse
-clear client queueName = postJSON client ("/queues/" ++ queueName  ++ "/clear")
+clear client queueName = postJSON client ("/queues/" `append` queueName  `append` "/clear")
 
+{-
 -- | Delete a queue
 deleteQueue :: Client -> QueueName -> IO IronResponse
 deleteQueue client queueName = undefined
@@ -102,7 +102,7 @@ deleteMessages :: Client -> QueueName -> [ID] -> IO IronResponse
 deleteMessages client queueName meessageIDs = undefined
 
 -- | Delete the message push status of a message
-deleteMessagePushStatus :: Client -> QueneName -> ID -> IO IronResponse
+deleteMessagePushStatus :: Client -> QueueName -> ID -> IO IronResponse
 deleteMessagePushStatus client queueName messageID = undefined
 
 -- | Remove alerts from a queue
@@ -135,3 +135,4 @@ updateAlerts client queueName alerts = undefined
 
 -- | Add subscribers to a queue
 addSubsrubers client queueName subscribers = undefined
+-}
