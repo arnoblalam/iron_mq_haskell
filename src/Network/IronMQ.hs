@@ -12,19 +12,27 @@ import Control.Monad (liftM)
 import Network.HTTP.Client (RequestBody(..))
 
 
--- | Some conv
+-- | Some convenient type synonyms to help keel track of things
 
--- | Construct a base URL from a client
-baseurl :: Client -> String
+type Url = String
+type Endpoint = String
+type Param = (Text, Text)
+type QueueName = String
+type ID = String -- could be a message ID, subscriber ID or whatever
+
+-- | Some convenience functions to make HTTP requests easier
+
+-- | Construct a base URL for HTTP requests from a client
+baseurl :: Client -> Url
 baseurl client = concat ["https://", server client, "/", apiVersion client,
                             "/projects/", projectID client]
 
 -- | An empty body for POST/PUT requests
 emptyBody = Raw "application/json" $ RequestBodyLBS ""
 
--- | Make a get request to an endpoint using connection info from client and
+-- | Make a GET request to an endpoint using connection info from client and
 -- query string set to parameters. Return the JSON results
-getJSONWithOpts :: FromJSON a => Client -> String -> [(Text, Text)] -> IO a
+getJSONWithOpts :: FromJSON a => Client -> Endpoint -> [Param] -> IO a
 getJSONWithOpts client endpoint parameters = do
     let url = baseurl client ++ endpoint
         getOpts = defaults & header "Content-Type" .~ ["application/json"]
@@ -32,85 +40,88 @@ getJSONWithOpts client endpoint parameters = do
     response <- asJSON =<< getWith getOpts url
     return (response ^. responseBody)
 
--- | Make a JSON post request to an endpoint using connection info from client
--- and body set to body
-postJSONWithBody :: (Postable a, FromJSON b) => Client -> String -> a -> IO b
+-- | Make a GET request to an endpoint using the connection info from client.
+-- Return the JSON results.
+getJSON ::FromJSON a => Client -> Endpoint -> IO a
+getJSON client s = getJSONWithOpts client s []
+
+-- | Make a POST a request to an endpoint using connection info from client
+-- and the body provided. Return the JSON response.
+postJSONWithBody :: (Postable a, FromJSON b) => Client -> Endpoint -> a -> IO b
 postJSONWithBody client endpoint body = do
     let url = baseurl client ++ endpoint
-        postOpts = defaults & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
+        postOpts = defaults & header "Authorization" .~
+            [encodeUtf8 ("OAuth " `append` token client)]
     response <- asJSON =<< postWith postOpts url body
     return (response ^. responseBody)
 
-postJSON :: FromJSON b => Client -> String -> IO b
+-- | Make a POST request to an endpoint using the connection into from client
+-- and an empty body. Returb the JSON response.
+postJSON :: FromJSON b => Client -> Endpoint -> IO b
 postJSON client endpoint = postJSONWithBody client endpoint emptyBody
-
--- | Make a get request to an endpoint using the connection info from client.
--- Return the JSON results.
-getJSON ::FromJSON a => Client -> String -> IO a
-getJSON client s = getJSONWithOpts client s []
 
 -- | Get a list of queues available to the client
 queues :: Client -> IO [QueueSummary]
 queues client = getJSON client "/queues"
 
 -- | Get a queue from the client
-getQueue :: Client -> String -> IO Queue
+getQueue :: Client -> QueueName -> IO Queue
 getQueue client queueName = getJSON client ("/queues/" ++ queueName)
 
 -- | Get a list of messages on a queue
-getMessages :: Client -> String -> IO MessageList
+getMessages :: Client -> QueueName -> IO MessageList
 getMessages client queueName = getJSON client
     ("/queues/" ++ queueName ++ "/messages")
 
-getMessageById :: Client -> String -> String -> IO Message
+getMessageById :: Client -> QueueName -> ID -> IO Message
 getMessageById client queueName messageID = getJSON client
     ("/queues/" ++ queueName ++ "/messages/" ++ messageID)
 
 -- | Get the push status of a message
-getMessagePushStatuses :: Client -> String -> String -> IO PushStatus
+getMessagePushStatuses :: Client -> QueueName -> ID -> IO PushStatus
 getMessagePushStatuses client queueName messageID = undefined
 
 -- | Post messages to a queue
-postMessages :: Client -> String -> MessageList -> IO IronResponse
-postMessages client queue messageList = undefined
+postMessages :: Client -> QueueName -> MessageList -> IO IronResponse
+postMessages client queueName messageList = undefined
 
 -- | Clear all messages from a queue
-clear :: Client -> String -> IO IronResponse
+clear :: Client -> QueueName -> IO IronResponse
 clear client queueName = postJSON client ("/queues/" ++ queueName  ++ "/clear")
 
 -- | Delete a queue
-deleteQueue :: Client -> String -> IO IronResponse
+deleteQueue :: Client -> QueueName -> IO IronResponse
 deleteQueue client queueName = undefined
 
 -- | Delete a message from a queue
-deleteMessage :: Client -> String -> String -> IO IronResponse
+deleteMessage :: Client -> QueueName -> ID -> IO IronResponse
 deleteMessage client queueName messageID = undefined
 
 -- | Delete several messages from a queue
-deleteMessages :: Client -> String -> [String] -> IO IronResponse
+deleteMessages :: Client -> QueueName -> [ID] -> IO IronResponse
 deleteMessages client queueName meessageIDs = undefined
 
 -- | Delete the message push status of a message
-deleteMessagePushStatus :: String -> String -> IO IronResponse
-deleteMessagePushStatus queueName messageID = undefined
+deleteMessagePushStatus :: Client -> QueneName -> ID -> IO IronResponse
+deleteMessagePushStatus client queueName messageID = undefined
 
 -- | Remove alerts from a queue
-deleteAlerts :: Client -> String -> [String] -> IO IronResponse
+deleteAlerts :: Client -> QueueName -> [ID] -> IO IronResponse
 deleteAlerts client queueName alertIDs = undefined
 
 -- | Remove an alert from a queue
-deleteAlert :: Client -> String -> String -> IO IronResponse
+deleteAlert :: Client -> QueueName -> ID -> IO IronResponse
 deleteAlert client queueName alertID = undefined
 
 -- Remove subscribers from a queue
 deleteSubscribers client queueName subscribers = undefined
 
 -- | Take a look at the next item on the queue
-peek :: Client -> String -> IO IronResponse
+peek :: Client -> QueueName -> IO IronResponse
 peek client queueName = undefined
 
 -- | Touch a message on the queue
-touch :: Client -> String -> String -> IO IronResponse
+touch :: Client -> QueueName -> ID -> IO IronResponse
 touch client queueName messageID = undefined
 
 -- | Update a
