@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Client where
+module Network.IronMQ.Client where
+
 import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Lens
@@ -29,6 +30,13 @@ data Queue = Queue {
         size :: Int,
         total_messages :: Int
 } deriving (Show, Generic)
+
+getJSON ::FromJSON a => String -> IO a
+getJSON s = do
+    let url = baseurl ++ s
+        getOpts = opts & param "oauth" .~ [token]
+    response <- asJSON =<< getWith getOpts url
+    return (response ^. responseBody)
 
 -- instance FromJSON QueueSummary
 instance FromJSON Queue
