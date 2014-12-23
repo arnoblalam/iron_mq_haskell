@@ -3,6 +3,7 @@ module Main where
 
 import Network.IronMQ
 
+testClient :: Client
 testClient = Client {
     token = "_B6KOfA16D4AmW2NwSCw12mgVxk",
     projectID = "53f691bd45d4960005000082",
@@ -10,4 +11,4 @@ testClient = Client {
     apiVersion = "1"
 }
 
-main = getMessages testClient "default"
+main = clear testClient "default"
