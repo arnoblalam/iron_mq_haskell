@@ -1,4 +1,4 @@
-Python language binding for IronMQ. [IronMQ](http://www.iron.io/products/mq) is an elastic message queue for managing data and event flow within cloud applications and between systems. [See How It Works](http://www.iron.io/products/mq/how)
+Haskell language binding for IronMQ. [IronMQ](http://www.iron.io/products/mq) is an elastic message queue for managing data and event flow within cloud applications and between systems. [See How It Works](http://www.iron.io/products/mq/how)
 
 # Getting Started
 
@@ -9,33 +9,22 @@ To start using iron_mq_python, you need to sign up and get an OAuth2 token.
 1. Go to http://iron.io/ and sign up.
 2. Get an OAuth2 Token at http://hud.iron.io/tokens
 
-## Install iron_mq_python
+## Install iron_mq_haskell
 
 ```sh
-pip install iron-mq
+cabal install iron-mq
 ```
-
-or just copy `iron_mq.py` and include it in your script:
-
-```python
-from iron_mq import *
-```
-
 ## Configure
 
-```python
-ironmq = IronMQ()
-```
-
-will try reasonable defaults, accepting following optionally:
+Create a client which stores your authentication information and server settings/
 
 ```
-ironmq = IronMQ(host="mq-aws-us-east-1.iron.io",
-                project_id="500f7b....b0f302e9",
-                token="Et1En7.....0LuW39Q",
-                protocol="https", port=443,
-                api_version=1,
-                config_file=None)
+client = Client {
+    server="mq-aws-us-east-1.iron.io",
+    porjectID="500f7b....b0f302e9",
+    token="Et1En7.....0LuW39Q",
+    api_version="1"
+}
 ```
 
 ## The Basics
