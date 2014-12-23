@@ -60,12 +60,15 @@ instance FromJSON Message where
 
 instance FromJSON MessageList
 
-getJSON ::FromJSON a => String -> IO a
-getJSON s = do
+getJSONWithOpts :: FromJSON a => String -> [(T.Text, T.Text)] -> IO a
+getJSONWithOpts s ps = do
     let url = baseurl ++ s
-        getOpts = opts & param "oauth" .~ [token]
+        getOpts = opts & params .~ ("oauth", token) : ps
     response <- asJSON =<< getWith getOpts url
     return (response ^. responseBody)
+
+getJSON ::FromJSON a => String -> IO a
+getJSON s = getJSONWithOpts s []
 
 getQueues :: IO [Queue]
 getQueues = getJSON "/queues"
