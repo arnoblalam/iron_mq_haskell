@@ -210,7 +210,7 @@ main = deleteMessagePushStatus client "test_queue" "123456789abcdef" "987654321f
 
 ```haskell
 fixed_desc_alert = alert {type = "fixed", direction = "desc", trigger = 1000}
-progressive_asc_alert = alter {'type' = 'progressive', 'direction'= 'asc', 'trigger'= 10000}
+progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger= 10000}
 -- | addAlerts client queue [alerts]
 main = addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
 ```
