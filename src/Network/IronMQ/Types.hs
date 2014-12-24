@@ -14,7 +14,7 @@ data Client = Client {
     projectID :: Text,
     server :: Text,
     apiVersion :: Text
-}
+} deriving (Show)
 
 data QueueSummary = QueueSummary {
         qsId :: Text,

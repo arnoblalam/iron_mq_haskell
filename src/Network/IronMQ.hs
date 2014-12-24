@@ -22,7 +22,7 @@ type ID = Text -- could be a message ID, subscriber ID or whatever
 -- | Some convenience functions to make HTTP requests easier
 
 -- | Construct a base URL for HTTP requests from a client
--- baseurl :: Client -> Text
+baseurl :: Client -> Text
 baseurl client = "https://" `append` server client `append` "/" `append` apiVersion client
                             `append` "/projects/" `append` projectID client
 -- | An empty body for POST/PUT requests
