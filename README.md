@@ -20,9 +20,9 @@ Create a client which stores your authentication information and server settings
 
 ```haskell
 client = Client {
-    server="mq-aws-us-east-1.iron.io",
-    porjectID="500f7b....b0f302e9",
-    token="Et1En7.....0LuW39Q",
+    server = "mq-aws-us-east-1.iron.io",
+    porjectID = "500f7b....b0f302e9",
+    token = "Et1En7.....0LuW39Q",
     api_version="1"
 }
 ```
@@ -31,114 +31,121 @@ client = Client {
 
 ### Listing queues
 
-```python
-ironmq.queues()
+```haskell
+queues client
 ```
-returns list of queues names
+returns list of queue names available to the client
 
-we get queue by name:
-```python
-queue = ironmq.queue("test_queue")
+we get a specific queue by name:
+
+```haskell
+myQueue = queue client "test_queue"
 ```
 
 ### **Push** a message(s) on the queue:
 
-```python
-queue.post("Hello world")
+We can change the default options of a message like so:
+
+```haskell
+main = postMessage "queueName" [message {body = "message1", message {body = "message2"}]
 ```
 
-Message can be described by dict:
+We can change the default settings for a message like so:
 
-```python
-message = {
-    "body" : "Test Message",
-    "timeout" : 120, # Timeout, in seconds. After timeout, item will be placed back on queue. Defaults to 60.
-    "delay" : 5, # The item will not be available on the queue until this many seconds have passed. Defaults to 0.
-    "expires_in" : 2*24*3600 # How long, in seconds, to keep the item on the queue before it is deleted.
+```haskell
+unorthoDoxMessage = message {
+    body = "axxon body",
+    timeout = 120 -- Timeout, in seconds. After timeout, item will be placed back on queue. Defaults to 60.
+    delay = 5 -- The item will not be available on the queue until this many seconds have passed. Defaults to 0.
+    expiresIn = 2*24*3600 -- How long, in seconds, to keep the item on the queue before it is deleted.
 }
-queue.post(message)
+
+main = postMessage "queueName" [unorthodoxMessage]
 ```
 
-We can post several messages at once:
-```python
-queue.post("more", "and more", "and more")
-queue.post(*[str(i) for i in range(10)])
+### **Pop** messages off the queue:
+
+```haskell
+-- | getMessage queueName max timeout
+getMessages "queneName" 100, 10) -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
-### **Pop** a message off the queue:
-```python
-queue.get(max=10, timeout=None) # {"messages": [{'id': '..', 'body': '..'}, ..]}
-```
 Set max to the number of messages to return, 1 by default. An optional `timeout` parameter can be used to specify a per-message timeout, or the timeout the message was posted with will be used.
 
 When you pop/get a message from the queue, it will NOT be deleted.
 It will eventually go back onto the queue after a timeout if you don't delete it (default timeout is 60 seconds).
 
 ### Get message by id
-```python
-queue.get_message_by_id("xxxxxxxx")
+```haskell
+getMessageById client "xxxxxxxx" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
 ```
 
-### **Delete** a message from the queue:
-```python
-queue.delete(message_id)
-```
-Delete a message from the queue when you're done with it.
+### **Delete** message from the queue:
 
-Delete multiple messages in one API call:
 
-```python
-queue.delete_multiple("xxxxxxxxx", "xxxxxxxxx")
+```haskell
+deleteMessages client [messageIDs]
 ```
-Delete multiple messages specified by messages id array.
 
 ### ***Clear*** a queue:
-```python
-queue.clear()
+
+```haskell
+clear queueName
 ```
 
 ### Get queue ***size***, ***id***, ***total_messages*** and whole ***info***
-```python
-queue.info()
- # {u'id': u'502d03d3211a8f5e7742d224',
- # u'name': u'queue12',
- # u'reserved': 0,
- # u'size': 15,
- # u'total_messages': 17}
-queue.size() # 15
-queue.name
-queue.total_messages() # 17
-queue.id() # u'502d03d3211a8f5e7742d224'
+```haskell
+main = do
+myQueue =  getQueue client queueName
+{-
+Queue {
+    qId = Just "541451a958a847405bfa6316",
+    qProjectId = "53f691bd45d4960005000082",
+    qName = "default",
+    qSize = Just 1,
+    qTotalMessages = Just 8,
+    qSubscribers = Nothing,
+    qRetries = Nothing,
+    qPushType = Nothing,
+    qRetriesDelay = Nothing
+}
+-}
+qSize myQueue -- Just 1
+qName myQueue -- "default"
+qTtalMessages -- Just 8
+qId myQueue -- "541451a958a847405bfa6316"
 ```
 
-### Peek at messages
+### Peek at messages:
+
 To view messages without reserving them, use peek:
 
-```python
-msgs = queue.peek(max=10) # {"messages": [{'id': '..', 'body': '..'}, ..]}
+```haskll
+main = peek client queueName max -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
-### Touch a message
+### Touch a message:
 
 To extend the reservation on a reserved message, use touch. The message reservation will be extended by the message's `timeout`.
 
-```python
-queue.touch(msg_id)
+```haskell
+main = touch client queue msg_id
 ```
 
-### Release a reserved message
+### Release a reserved message:
+
 To release a message that is currently reserved, use release:
 
-```python
-queue.release(msg_id, delay=30) # message will be released after delay seconds, 0 by defaults
+```haskell
+main = release client queueName msg_id delay -- message will be released after delay seconds
 ```
 
 ### Delete a queue
 
 To delete a queue, use `delete_queue`:
 
-```python
-queue.delete_queue()
+```haskell
+main = deleteQueue client queueName
 ```
 
 ## Push Queues
@@ -147,64 +154,60 @@ queue.delete_queue()
 
 To update the queue's push type and subscribers, use update:
 
-```python
-queue.update(subscribers=["http://endpoint1.com", "https://end.point.com/2"], push_type"unicast")
+```hasekll
+update client queueName [subscriber {url = "http://endpoint1.com", subscriber {url = "https://end.point.com/2"}] "unicast"
 ```
 
 ### Add subscribers to a push queue
 
-```python
-queue.add_subscribers(*["http://endpoint1.com", "https://end.point.com/2"])
+```haskell
+addSubscribers client queueName [subscriber "http://endpoint1.com", subscriber "https://end.point.com/2"])
 ```
 
 ### Remove subscribers from a push queue
 
-```python
-queue.remove_subscribers(*["http://endpoint1.com", "https://end.point.com/2"])
+```haskell
+removeSubscribers client queueName [subscriber {url = "http://endpoint1.com"}, subscriber {url ="https://end.point.com/2"})
 ```
 
 ### Get the push statuses of a message
 
-```python
-queue.get_message_push_statuses(message_id) # {"subscribers": [{"retries_delay": 60, "retries_remaining": 2, "status_code": 200, "status": "deleted", "url": "http://endpoint1.com", "id": "52.."}, {..}, ..]}
+```haskell
+getMessagePushStatuses client queueName messageID -- subscriberList {subscribers = [Subscriber {retriesDelay = Just 60, retriesRemaining" = Just 2, statusCode = Just 200, status = Just "deleted", "url": "http://endpoint1.com", "id": "52.."}, ...]}
 ```
 
 ### Delete a pushed message
 
 If you respond with a 202 status code, the pushed message will be reserved, not deleted, and should be manually deleted. You can get the message ID and subscriber ID from the push message's headers.
 
-```python
-queue.delete_message_push_status(message_id, subscriber_id)
+```haskell
+deleteMessagePushStatus client queueName messageID, subscriberID
 ```
 
 ## Pull queues
 
-### Add alerts to a queue
+### Add alerts to a queue:
 
-```python
-fixed_desc_alert = {'type': 'fixed', 'direction': 'desc', 'trigger': 1000, 'queue': 'q'}
-progressive_asc_alert = {'type': 'progressive', 'direction': 'asc', 'trigger': 10000, 'queue': 'q'}
-queue.add_alerts(*[fixed_desc_alert, progressive_asc_alert])
+```haskell
+fixed_desc_alert = alert {'type' = 'fixed', 'direction' = 'desc', 'trigger' = 1000}
+progressive_asc_alert = alter {'type' = 'progressive', 'direction'= 'asc', 'trigger'= 10000}
+main = addAlerts client queue ([fixed_desc_alert, progressive_asc_alert])
 ```
 
-### Update alerts in a queue
+### Update alerts in a queue:
 
-```python
-progressive_asc_alert = {'type': 'progressive', 'direction': 'asc', 'trigger': 5000, 'queue': 'q'}
-queue.update_alerts(*[progressive_asc_alert])
+```haskell
+progressive_asc_alert = alert {'type': 'progressive', 'direction': 'asc', 'trigger': 5000, 'queue': 'q'}
+updateAlerts client queue ([progressive_asc_alert])
 ```
 
-### Remove alerts from a queue
+### Remove alerts from a queue:
 
-```python
-q.remove_alerts(*['5305d3b5a3e920763013c796', '513015d32b5a3e763013c796'])
+```haskell
+removeAlerts client queue (['5305d3b5a3e920763013c796', '513015d32b5a3e763013c796'])
 ```
 
-### Remove single alert from a queue
-
-```python
-q.remove_alert('5305d3b5a3e920763013c796')
-```
+### Remove single alert from a queue:
 
 # Full Documentation
 

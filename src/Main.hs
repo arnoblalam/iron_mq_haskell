@@ -11,4 +11,4 @@ testClient = Client {
     apiVersion = "1"
 }
 
-main = clear testClient "default"
+main = getQueue testClient "default"
