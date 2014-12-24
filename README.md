@@ -42,7 +42,7 @@ we get a specific queue by name:
 myQueue = queue client "test_queue"
 ```
 
-### **Push** a message(s) on the queue:
+### Push messages on the queue:
 
 We can change the default options of a message like so:
 
@@ -63,11 +63,11 @@ unorthoDoxMessage = message {
 main = postMessage "queueName" [unorthodoxMessage]
 ```
 
-### **Pop** messages off the queue:
+### Pop messages off the queue:
 
 ```haskell
 -- | getMessage queueName max timeout
-getMessages "queneName" 100, 10) -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+main = getMessages "queneName" 100, 10) -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
 Set max to the number of messages to return, 1 by default. An optional `timeout` parameter can be used to specify a per-message timeout, or the timeout the message was posted with will be used.
@@ -77,25 +77,28 @@ It will eventually go back onto the queue after a timeout if you don't delete it
 
 ### Get message by id
 ```haskell
-getMessageById client "xxxxxxxx" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
+-- | getMessage client queueName
+main = getMessageById client "test_queue" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
 ```
 
-### **Delete** message from the queue:
-
+### Delete messages from the queue:
 
 ```haskell
-deleteMessages client [messageIDs]
+--| deleteMessage client queueName [messageIDs]
+main = deleteMessages client "test_queue" ["123456789abcdef", "fedcba98654321"]
 ```
 
-### ***Clear*** a queue:
+### Clear a queue:
 
 ```haskell
-clear queueName
+-- | clear client queueName
+main = clear client "test_queue"
 ```
 
 ### Get queue ***size***, ***id***, ***total_messages*** and whole ***info***
 ```haskell
 main = do
+-- | getQueue client queueName
 myQueue =  getQueue client queueName
 {-
 Queue {
@@ -110,10 +113,18 @@ Queue {
     qRetriesDelay = Nothing
 }
 -}
+
+-- | qSize queue
 qSize myQueue -- Just 1
+
+-- | qName queue
 qName myQueue -- "default"
-qTtalMessages -- Just 8
-qId myQueue -- "541451a958a847405bfa6316"
+
+-- | qTotalMessages queue
+qTotalMessages -- Just 8
+
+-- | qID queue
+qID myQueue -- "541451a958a847405bfa6316"
 ```
 
 ### Peek at messages:
@@ -121,7 +132,8 @@ qId myQueue -- "541451a958a847405bfa6316"
 To view messages without reserving them, use peek:
 
 ```haskll
-main = peek client queueName max -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+-- | peek client queueName max
+main = peek client "test_queue" 10 -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
 ### Touch a message:
@@ -129,7 +141,8 @@ main = peek client queueName max -- MessageList {messages = [Message {mId = Just
 To extend the reservation on a reserved message, use touch. The message reservation will be extended by the message's `timeout`.
 
 ```haskell
-main = touch client queue msg_id
+-- | touch client queueName messageID
+main = touch client "test_queue" messageID
 ```
 
 ### Release a reserved message:
@@ -137,15 +150,17 @@ main = touch client queue msg_id
 To release a message that is currently reserved, use release:
 
 ```haskell
-main = release client queueName msg_id delay -- message will be released after delay seconds
+-- | release client queueName messageID delay
+main = release client "test_queue" "123456789abcdef" 120 -- message will be released after delay seconds
 ```
 
 ### Delete a queue
 
-To delete a queue, use `delete_queue`:
+To delete a queue, use `deleteQueue`:
 
 ```haskell
-main = deleteQueue client queueName
+-- | deleteQueue client queueName
+main = deleteQueue client "test_queue"
 ```
 
 ## Push Queues
@@ -155,25 +170,29 @@ main = deleteQueue client queueName
 To update the queue's push type and subscribers, use update:
 
 ```hasekll
-update client queueName [subscriber {url = "http://endpoint1.com", subscriber {url = "https://end.point.com/2"}] "unicast"
+-- | update client queueName [subscribers]
+main = update client "test_queue" [subscriber {url = "http://endpoint1.com", subscriber {url = "https://end.point.com/2"}] "unicast"
 ```
 
 ### Add subscribers to a push queue
 
 ```haskell
-addSubscribers client queueName [subscriber "http://endpoint1.com", subscriber "https://end.point.com/2"])
+-- | addSubscribers client queueName [subscribers]
+main = addSubscribers client test_queue [subscriber {url = "http://endpoint1.com"}, subscriber {url = "https://end.point.com/2"}])
 ```
 
 ### Remove subscribers from a push queue
 
 ```haskell
-removeSubscribers client queueName [subscriber {url = "http://endpoint1.com"}, subscriber {url ="https://end.point.com/2"})
+-- | removeSubscribers client queueName [subscribers]
+main = removeSubscribers client "test_queue" [subscriber {url = "http://endpoint1.com"}, subscriber {url ="https://end.point.com/2"})
 ```
 
 ### Get the push statuses of a message
 
 ```haskell
-getMessagePushStatuses client queueName messageID -- subscriberList {subscribers = [Subscriber {retriesDelay = Just 60, retriesRemaining" = Just 2, statusCode = Just 200, status = Just "deleted", "url": "http://endpoint1.com", "id": "52.."}, ...]}
+-- | getMessagePushStatuses client queueName messageID
+main = getMessagePushStatuses client "test_queue" "123456789abcdef" -- subscriberList {subscribers = [Subscriber {retriesDelay = Just 60, retriesRemaining" = Just 2, statusCode = Just 200, status = Just "deleted", "url": "http://endpoint1.com", "id": "52.."}, ...]}
 ```
 
 ### Delete a pushed message
@@ -181,7 +200,8 @@ getMessagePushStatuses client queueName messageID -- subscriberList {subscribers
 If you respond with a 202 status code, the pushed message will be reserved, not deleted, and should be manually deleted. You can get the message ID and subscriber ID from the push message's headers.
 
 ```haskell
-deleteMessagePushStatus client queueName messageID, subscriberID
+-- deleteMessagePushStatus client queueName messageID subscriberID
+main = deleteMessagePushStatus client "test_queue" "123456789abcdef" "987654321fedcba"
 ```
 
 ## Pull queues
@@ -191,23 +211,24 @@ deleteMessagePushStatus client queueName messageID, subscriberID
 ```haskell
 fixed_desc_alert = alert {'type' = 'fixed', 'direction' = 'desc', 'trigger' = 1000}
 progressive_asc_alert = alter {'type' = 'progressive', 'direction'= 'asc', 'trigger'= 10000}
-main = addAlerts client queue ([fixed_desc_alert, progressive_asc_alert])
+-- | addAlerts client queue [alerts]
+main = addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
 ```
 
 ### Update alerts in a queue:
 
 ```haskell
 progressive_asc_alert = alert {'type': 'progressive', 'direction': 'asc', 'trigger': 5000, 'queue': 'q'}
-updateAlerts client queue ([progressive_asc_alert])
+-- | updateAlerts client queue [alerts]
+main = updateAlerts client "test_queue" ([progressive_asc_alert])
 ```
 
 ### Remove alerts from a queue:
 
 ```haskell
-removeAlerts client queue (['5305d3b5a3e920763013c796', '513015d32b5a3e763013c796'])
+-- | removeAlerts client queue [alertIDs]
+main = removeAlerts client "test_queue" (['5305d3b5a3e920763013c796', '513015d32b5a3e763013c796'])
 ```
-
-### Remove single alert from a queue:
 
 # Full Documentation
 
