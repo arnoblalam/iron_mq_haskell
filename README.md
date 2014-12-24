@@ -47,7 +47,7 @@ myQueue = queue client "test_queue"
 We can change the default options of a message like so:
 
 ```haskell
-main = postMessage "queueName" [message {body = "message1", message {body = "message2"}]
+main = postMessage "queueName" [message {body = "message1"}, message {body = "message2"}]
 ```
 
 We can change the default settings for a message like so:
@@ -67,18 +67,18 @@ main = postMessage "queueName" [unorthodoxMessage]
 
 ```haskell
 -- | getMessage queueName max timeout
-main = getMessages "queneName" 100, 10) -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+main = getMessages "queneName" 100, Just 10 -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
-Set max to the number of messages to return, 1 by default. An optional `timeout` parameter can be used to specify a per-message timeout, or the timeout the message was posted with will be used.
+Set max to the number of messages to return, 1 by default. A `timeout` parameter can be used to specify a per-message timeout, or the timeout the message was posted with will be used.
 
 When you pop/get a message from the queue, it will NOT be deleted.
 It will eventually go back onto the queue after a timeout if you don't delete it (default timeout is 60 seconds).
 
 ### Get message by id
 ```haskell
--- | getMessage client queueName
-main = getMessageById client "test_queue" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
+-- | getMessage client queueName messageID
+main = getMessageById client "test_queue" "1234567789abcdef" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
 ```
 
 ### Delete messages from the queue:
@@ -104,7 +104,7 @@ myQueue =  getQueue client queueName
 Queue {
     qId = Just "541451a958a847405bfa6316",
     qProjectId = "53f691bd45d4960005000082",
-    qName = "default",
+    qName = "test_queue",
     qSize = Just 1,
     qTotalMessages = Just 8,
     qSubscribers = Nothing,
@@ -118,7 +118,7 @@ Queue {
 qSize myQueue -- Just 1
 
 -- | qName queue
-qName myQueue -- "default"
+qName myQueue -- "test_queue"
 
 -- | qTotalMessages queue
 qTotalMessages -- Just 8
@@ -131,7 +131,7 @@ qID myQueue -- "541451a958a847405bfa6316"
 
 To view messages without reserving them, use peek:
 
-```haskll
+```haskell
 -- | peek client queueName max
 main = peek client "test_queue" 10 -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
@@ -169,9 +169,9 @@ main = deleteQueue client "test_queue"
 
 To update the queue's push type and subscribers, use update:
 
-```hasekll
+```haskell
 -- | update client queueName [subscribers]
-main = update client "test_queue" [subscriber {url = "http://endpoint1.com", subscriber {url = "https://end.point.com/2"}] "unicast"
+main = update client "test_queue" [subscriber {url = "http://endpoint1.com"}, subscriber {url = "https://end.point.com/2"}] "unicast"
 ```
 
 ### Add subscribers to a push queue
@@ -209,7 +209,7 @@ main = deleteMessagePushStatus client "test_queue" "123456789abcdef" "987654321f
 ### Add alerts to a queue:
 
 ```haskell
-fixed_desc_alert = alert {'type' = 'fixed', 'direction' = 'desc', 'trigger' = 1000}
+fixed_desc_alert = alert {type = "fixed", direction = "desc", trigger = 1000}
 progressive_asc_alert = alter {'type' = 'progressive', 'direction'= 'asc', 'trigger'= 10000}
 -- | addAlerts client queue [alerts]
 main = addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
@@ -218,7 +218,7 @@ main = addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
 ### Update alerts in a queue:
 
 ```haskell
-progressive_asc_alert = alert {'type': 'progressive', 'direction': 'asc', 'trigger': 5000, 'queue': 'q'}
+progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger = 5000, queue = "q"}
 -- | updateAlerts client queue [alerts]
 main = updateAlerts client "test_queue" ([progressive_asc_alert])
 ```
