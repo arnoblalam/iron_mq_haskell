@@ -42,7 +42,7 @@ we get a specific queue by name:
 myQueue = queue client "test_queue"
 ```
 
-### Push messages on the queue:
+### Push messages on the queue
 
 We can change the default options of a message like so:
 
@@ -63,11 +63,11 @@ unorthoDoxMessage = message {
 main = postMessage "queueName" [unorthodoxMessage]
 ```
 
-### Pop messages off the queue:
+### Pop messages off the queue
 
 ```haskell
 -- | getMessage queueName max timeout
-main = getMessages "queneName" 100, Just 10 -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+main = getMessages "queneName" 100 (Just 10) -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
 Set max to the number of messages to return, 1 by default. A `timeout` parameter can be used to specify a per-message timeout, or the timeout the message was posted with will be used.
@@ -81,14 +81,14 @@ It will eventually go back onto the queue after a timeout if you don't delete it
 main = getMessageById client "test_queue" "1234567789abcdef" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
 ```
 
-### Delete messages from the queue:
+### Delete messages from the queue
 
 ```haskell
 --| deleteMessage client queueName [messageIDs]
-main = deleteMessages client "test_queue" ["123456789abcdef", "fedcba98654321"]
+main = deleteMessages client "test_queue" ["123456789abcdef", "fedcba987654321"]
 ```
 
-### Clear a queue:
+### Clear a queue
 
 ```haskell
 -- | clear client queueName
@@ -127,7 +127,7 @@ qTotalMessages -- Just 8
 qID myQueue -- "541451a958a847405bfa6316"
 ```
 
-### Peek at messages:
+### Peek at messages
 
 To view messages without reserving them, use peek:
 
@@ -136,7 +136,7 @@ To view messages without reserving them, use peek:
 main = peek client "test_queue" 10 -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
 ```
 
-### Touch a message:
+### Touch a message
 
 To extend the reservation on a reserved message, use touch. The message reservation will be extended by the message's `timeout`.
 
@@ -145,7 +145,7 @@ To extend the reservation on a reserved message, use touch. The message reservat
 main = touch client "test_queue" messageID
 ```
 
-### Release a reserved message:
+### Release a reserved message
 
 To release a message that is currently reserved, use release:
 
@@ -206,7 +206,7 @@ main = deleteMessagePushStatus client "test_queue" "123456789abcdef" "987654321f
 
 ## Pull queues
 
-### Add alerts to a queue:
+### Add alerts to a queue
 
 ```haskell
 fixed_desc_alert = alert {type = "fixed", direction = "desc", trigger = 1000}
@@ -215,7 +215,7 @@ progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger=
 main = addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
 ```
 
-### Update alerts in a queue:
+### Update alerts in a queue
 
 ```haskell
 progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger = 5000, queue = "q"}
@@ -223,7 +223,7 @@ progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger 
 main = updateAlerts client "test_queue" ([progressive_asc_alert])
 ```
 
-### Remove alerts from a queue:
+### Remove alerts from a queue
 
 ```haskell
 -- | removeAlerts client queue [alertIDs]
