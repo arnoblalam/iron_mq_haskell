@@ -68,6 +68,17 @@ postJSONWithBody client endpoint body = do
 postJSON :: (ToJSON b, FromJSON b) => Client -> Endpoint -> IO b
 postJSON client endpoint = postJSONWithBody client endpoint emptyBody
 
+{-
+deleteJSONWithBody :: (Postable a, FromJSON b) => Client ->Endpoint -> Postable a -> IO b
+deleteJSONWithBody client endpoint body = do
+        let url = baseurl client `append` endpoint
+            deleteOpts = defaults 
+                & header "Content-Type" .~ ["application/json"] 
+                & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
+        response <- asJSON =<< deleteWith deleteOpts (unpack url)
+        return (response ^. responseBody)
+-}
+
 deleteJSON :: FromJSON a => Client ->Endpoint -> IO a
 deleteJSON client endpoint = do
         let url = baseurl client `append` endpoint
@@ -102,6 +113,7 @@ getMessages' client queueName max timeout = getJSONWithOpts client endpoint para
 getMessages :: Client -> QueueName -> IO MessageList
 getMessages client queueName = getMessages' client queueName Nothing Nothing
 
+-- | Get a message by ID
 getMessageById :: Client -> QueueName -> ID -> IO Message
 getMessageById client queueName messageID = getJSON client
     ("/queues/" `append` queueName `append` "/messages/" `append` messageID)
@@ -131,10 +143,11 @@ deleteMessage :: Client -> QueueName -> ID -> IO IronResponse
 deleteMessage client queueName messageID = deleteJSON client endpoint where
         endpoint = "/queues/" `append` queueName `append` "/messages/" `append` messageID
 
-
+{-
 -- | Delete several messages from a queue
 deleteMessages :: Client -> QueueName -> [ID] -> IO IronResponse
-deleteMessages client queueName meessageIDs = undefined
+deleteMessages client queueName meessageIDs = deleteJSON client endpoint
+-}
 
 -- | Delete the message push status of a message
 deleteMessagePushStatus :: Client -> QueueName -> ID -> IO IronResponse
@@ -152,21 +165,33 @@ deleteAlert client queueName alertID = undefined
 deleteSubscribers client queueName subscribers = undefined
 
 -- | Take a look at the next item on the queue
-peek :: Client -> QueueName -> IO IronResponse
-peek client queueName = undefined
+peek' :: Client -> QueueName -> Maybe Int -> IO MessageList
+peek' client queueName max = getJSONWithOpts client endpoint opts where
+        opts = case max of
+                Nothing -> []
+                Just x -> [("n", pack (show x))]
+        endpoint = "/queues/" `append` queueName `append` "/messages/peek"
+
+peek :: Client -> QueueName -> IO MessageList
+peek client queueName = peek' client queueName Nothing
 
 -- | Touch a message on the queue
 touch :: Client -> QueueName -> ID -> IO IronResponse
-touch client queueName messageID = undefined
+touch client queueName messageID = postJSON client endpoint where
+        endpoint = "/queues/" `append` queueName `append` "/messages/" `append` pack (show messageID) `append` "/touch"
 
--- | Update a
+-- | Update a queues subscribers
+update :: Client -> QueueName -> [Subscriber] -> IO IronResponse
 update client queueName subscribers = undefined
 
 -- | Add alerts to a queue
+addAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
 addAlerts client queueName alerts = undefined
 
 -- | Update alerts on a queue
+updateAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
 updateAlerts client queueName alerts = undefined
 
 -- | Add subscribers to a queue
-addSubsrubers client queueName subscribers = undefined
+addSubscribers :: Client -> QueueName -> [Subscriber] -> IO IronResponse
+addSubscribers client queueName subscribers = undefined
