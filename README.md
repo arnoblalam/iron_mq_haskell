@@ -32,6 +32,7 @@ client = Client {
 ### Listing queues
 
 ```haskell
+queues :: Client -> QueueSummary
 queues client
 ```
 returns list of queue names available to the client
