@@ -100,6 +100,10 @@ data Message = Message {
         mReservedCount :: Maybe Int
 } deriving (Show)
 
+-- | A default constructor for message
+message :: Message
+message = Message Nothing "" Nothing Nothing
+
 instance FromJSON Message where
         parseJSON (Object v) = Message <$>
                 v .:? "id" <*>
