@@ -81,7 +81,7 @@ getMessagePushStatus :: Client -> QueueName -> ID -> IO PushStatus
 getMessagePushStatus client queueName messageID = undefined
 
 -- | Post messages to a queue
-postMessages :: Client -> QueueName -> MessageList -> IO IronResponse
+postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
 postMessages client queueName messageList = undefined
 
 -- | Clear all messages from a queue
