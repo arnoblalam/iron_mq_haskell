@@ -11,15 +11,24 @@ import Network.IronMQ.Types
 import Network.HTTP.Client (RequestBody(..))
 
 
--- | Some convenient type synonyms to help keel track of things
+-- * Some convenient type synonyms to help keel track of things
 
+-- | An URL is a Text
 type Url = Text
+
+-- | An endpoint is a Text
 type Endpoint = Text
+
+-- | A Parameter is a pair of Texts
 type Param = (Text, Text)
+
+-- | A QueueName is a type of text
 type QueueName = Text
+
+-- An ID is a text
 type ID = Text -- could be a message ID, subscriber ID or whatever
 
--- | Some convenience functions to make HTTP requests easier
+-- * Some convenience functions to make HTTP requests easier
 
 -- | Construct a base URL for HTTP requests from a client
 baseurl :: Client -> Text
@@ -58,6 +67,9 @@ postJSONWithBody client endpoint body = do
 -- and an empty body. Returb the JSON response.
 postJSON :: (ToJSON b, FromJSON b) => Client -> Endpoint -> IO b
 postJSON client endpoint = postJSONWithBody client endpoint emptyBody
+
+
+-- * The public API
 
 -- | Get a list of queues available to the client
 queues :: Client -> IO [QueueSummary]
