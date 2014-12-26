@@ -1,5 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Network.IronMQ (module Network.IronMQ, Network.IronMQ.Types.Client(..)) where
+module Network.IronMQ (module
+        Network.IronMQ, 
+        Client(..),
+        message
+        ) where
 
 import Network.Wreq
 import Network.Wreq.Types (Postable)
@@ -53,8 +57,9 @@ getJSON client s = getJSONWithOpts client s []
 postJSONWithBody :: (Postable a, FromJSON b) => Client -> Endpoint -> a -> IO b
 postJSONWithBody client endpoint body = do
     let url = baseurl client `append` endpoint
-        postOpts = defaults & header "Authorization" .~
-            [encodeUtf8 ("OAuth " `append` token client)]
+        postOpts = defaults
+                & header "Content-Type" .~ ["application/json"]
+                & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
     response <- asJSON =<< postWith postOpts (unpack url) body
     return (response ^. responseBody)
 
@@ -63,6 +68,14 @@ postJSONWithBody client endpoint body = do
 postJSON :: (ToJSON b, FromJSON b) => Client -> Endpoint -> IO b
 postJSON client endpoint = postJSONWithBody client endpoint emptyBody
 
+deleteJSON :: FromJSON a => Client ->Endpoint -> IO a
+deleteJSON client endpoint = do
+        let url = baseurl client `append` endpoint
+            deleteOpts = defaults 
+                & header "Content-Type" .~ ["application/json"] 
+                & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
+        response <- asJSON =<< deleteWith deleteOpts (unpack url)
+        return (response ^. responseBody)
 
 -- * The public API
 
@@ -99,20 +112,25 @@ getMessagePushStatus client queueName messageID = undefined
 
 -- | Post messages to a queue
 postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
-postMessages client queueName messageList = undefined
+postMessages client queueName messages = postJSONWithBody client endpoint body where
+        endpoint = "/queues/" `append` queueName `append` "/messages"
+        body = toJSON (MessageList {messages = messages})
+
 
 -- | Clear all messages from a queue
 clear :: Client -> QueueName -> IO IronResponse
 clear client queueName = postJSON client ("/queues/" `append` queueName  `append` "/clear")
 
-{-
 -- | Delete a queue
 deleteQueue :: Client -> QueueName -> IO IronResponse
-deleteQueue client queueName = undefined
+deleteQueue client queueName = deleteJSON client endpoint where
+        endpoint = "/queues/" `append` queueName
 
 -- | Delete a message from a queue
 deleteMessage :: Client -> QueueName -> ID -> IO IronResponse
-deleteMessage client queueName messageID = undefined
+deleteMessage client queueName messageID = deleteJSON client endpoint where
+        endpoint = "/queues/" `append` queueName `append` "/messages/" `append` messageID
+
 
 -- | Delete several messages from a queue
 deleteMessages :: Client -> QueueName -> [ID] -> IO IronResponse
@@ -152,4 +170,3 @@ updateAlerts client queueName alerts = undefined
 
 -- | Add subscribers to a queue
 addSubsrubers client queueName subscribers = undefined
--}
