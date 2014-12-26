@@ -1,7 +1,7 @@
 name:                iron-mq
 version:             0.1.0.0
 synopsis:            Iron.IO message queueing client library
-description:         A client library for communication with the Iron.IO's message queueing service
+description:         A client library for communication with Iron.IO's message queueing service
 homepage:            https://github.com/arnoblalam/iron_mq_haskell
 license:             GPL-3
 license-file:        LICENSE
