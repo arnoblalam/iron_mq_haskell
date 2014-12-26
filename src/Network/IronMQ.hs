@@ -5,7 +5,7 @@ import Network.Wreq
 import Network.Wreq.Types (Postable)
 import Control.Lens
 import Data.Aeson (FromJSON, ToJSON, toJSON)
-import Data.Text (Text, append, unpack)
+import Data.Text (Text, append, unpack, pack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.IronMQ.Types
 import Network.HTTP.Client (RequestBody(..))
@@ -67,10 +67,20 @@ queues client = getJSON client "/queues"
 getQueue :: Client -> QueueName -> IO Queue
 getQueue client queueName = getJSON client ("/queues/" `append` queueName)
 
+
+-- | Get a list of messages on the queue (allowing specification of number of messages and delay)
+getMessages' :: Client -> QueueName -> Maybe Int -> Maybe Int -> IO MessageList
+getMessages' client queueName max timeout = getJSONWithOpts client endpoint params where
+    endpoint = ("/queues/" `append` queueName `append` "/messages")
+    params = case (max, timeout) of
+                (Nothing, Nothing)      ->      []
+                (Just x, Nothing)       ->      [("n", pack (show x))]
+                (Nothing, Just y)       ->      [("wait", pack (show y))]
+                (Just x, Just y)        ->      [("n", pack (show x)), ("wait", pack (show y))]
+
 -- | Get a list of messages on a queue
 getMessages :: Client -> QueueName -> IO MessageList
-getMessages client queueName = getJSON client
-    ("/queues/" `append` queueName `append` "/messages")
+getMessages client queueName = getMessages' client queueName Nothing Nothing
 
 getMessageById :: Client -> QueueName -> ID -> IO Message
 getMessageById client queueName messageID = getJSON client

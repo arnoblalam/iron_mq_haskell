@@ -130,3 +130,22 @@ instance FromJSON IronResponse where
         parseJSON _ = mzero
 
 instance ToJSON IronResponse
+
+data Alert = Alert {
+        aType :: Text, 
+        aTrigger::Int, 
+        aQueue::Text, 
+        aDirection::Maybe Text, 
+        aSnooze::Maybe Int
+} deriving (Show, Generic)
+
+instance FromJSON Alert where
+        parseJSON (Object v) = Alert <$>
+                v .: "type" <*>
+                v .: "trigger" <*>
+                v .: "queue" <*>
+                v .:? "direction" <*>
+                v .:? "snooze"
+        parseJSON _ = mzero
+
+instance ToJSON Alert

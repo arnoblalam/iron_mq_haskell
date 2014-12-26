@@ -35,7 +35,7 @@ client = Client {
 queues :: Client -> QueueSummary
 queues client
 ```
-returns list of queue names available to the client
+returns list of queue names available to the client.
 
 we get a specific queue by name:
 
