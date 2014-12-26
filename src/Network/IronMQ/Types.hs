@@ -119,8 +119,14 @@ instance FromJSON MessageList
 instance ToJSON MessageList
 
 data IronResponse = IronResponse {
-        ids :: Maybe Text,
-        msg :: Text
+        irIds :: Maybe [Text],
+        irMsg :: Text
 } deriving (Show, Generic)
 
-instance FromJSON IronResponse
+instance FromJSON IronResponse where
+        parseJSON (Object v) = IronResponse <$>
+                v .:? "ids" <*>
+                v .: "msg"
+        parseJSON _ = mzero
+
+instance ToJSON IronResponse
