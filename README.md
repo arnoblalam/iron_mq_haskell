@@ -48,8 +48,8 @@ myQueue = getQueue client "test_queue"
 We can change the default options of a message like so:
 
 ```haskell
-postMessage :: Client -> QueueName -> [Message] -> IO IronResponse
-main = postMessages client "queueName" [message {body = "message1"}, message {body = "message2"}]
+postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
+postMessages client "queueName" [message {body = "message1"}, message {body = "message2"}]
 ```
 
 We can change the default settings for a message like so:
@@ -69,7 +69,7 @@ main = postMessage "queueName" [unorthodoxMessage]
 
 ```haskell
 getMessages :: Client -> QueueName -> IO MessageList
-main = getMessages client "queneName"
+getMessages client "queneName"
 {- 
 MessageList 
     {
