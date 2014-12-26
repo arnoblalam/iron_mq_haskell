@@ -10,7 +10,7 @@ maintainer:          arnoblalam@gmail.com
 -- copyright:           
 category:            Network
 build-type:          Simple
-extra-source-files: README.md  
+extra-source-files: README.md, CHANGES.md
 cabal-version:       >=1.10
 
 library
