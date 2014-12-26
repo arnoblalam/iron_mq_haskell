@@ -95,22 +95,22 @@ main = getMessageById client "test_queue" "1234567789abcdef"
 ### Delete messages from the queue
 
 ```haskell
---| deleteMessage client queueName [messageIDs]
-main = deleteMessages client "test_queue" ["123456789abcdef", "fedcba987654321"]
+deleteMessages :: Client -> QueueName -> [ID] -> IO IronResponse
+deleteMessages client "test_queue" ["123456789abcdef", "fedcba987654321"]
 ```
 
 ### Clear a queue
 
 ```haskell
--- | clear client queueName
-main = clear client "test_queue"
+clear :: Client -> QueueName -> IO IronResponse
+clear client "test_queue"
 ```
 
 ### Get queue ***size***, ***id***, ***total_messages*** and whole ***info***
 ```haskell
 main = do
 -- | getQueue client queueName
-myQueue =  getQueue client queueName
+myQueue <-  getQueue client queueName
 {-
 Queue {
     qId = Just "541451a958a847405bfa6316",
@@ -143,17 +143,22 @@ qID myQueue -- "541451a958a847405bfa6316"
 To view messages without reserving them, use peek:
 
 ```haskell
--- | peek client queueName max
-main = peek client "test_queue" 10 -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+peek :: Client -> QueueName -> Int -> IO MessageList
+peek client "test_queue" 10
+{-
+    MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+-}
 ```
+
+The third parameter is an integer specifying the maximum number of messages to retrieve.
 
 ### Touch a message
 
 To extend the reservation on a reserved message, use touch. The message reservation will be extended by the message's `timeout`.
 
 ```haskell
--- | touch client queueName messageID
-main = touch client "test_queue" messageID
+touch :: Client -> QueueName -> ID -> IO IronResponse
+touch client "test_queue" messageID
 ```
 
 ### Release a reserved message
@@ -161,9 +166,11 @@ main = touch client "test_queue" messageID
 To release a message that is currently reserved, use release:
 
 ```haskell
--- | release client queueName messageID delay
-main = release client "test_queue" "123456789abcdef" 120 -- message will be released after delay seconds
+release :: Client -> QueueName -> ID -> Int -> IO IronResponse
+release client "test_queue" "123456789abcdef" 120 -- message will be released after delay seconds
 ```
+
+The last parameter is the delay time before the message is released.
 
 ### Delete a queue
 
@@ -171,7 +178,7 @@ To delete a queue, use `deleteQueue`:
 
 ```haskell
 -- | deleteQueue client queueName
-main = deleteQueue client "test_queue"
+deleteQueue client "test_queue"
 ```
 
 ## Push Queues
@@ -181,29 +188,35 @@ main = deleteQueue client "test_queue"
 To update the queue's push type and subscribers, use update:
 
 ```haskell
--- | update client queueName [subscribers]
-main = update client "test_queue" [subscriber {url = "http://endpoint1.com"}, subscriber {url = "https://end.point.com/2"}] "unicast"
+update :: Client -> QueueName -> [Subscriber] -> String -> IO Response
+update client "test_queue" [subscriber {url = "http://endpoint1.com"}, subscriber {url = "https://end.point.com/2"}] "unicast"
 ```
+
+The last parameter is the broadcast type (either "unicast" or "multicast")
 
 ### Add subscribers to a push queue
 
 ```haskell
--- | addSubscribers client queueName [subscribers]
-main = addSubscribers client test_queue [subscriber {url = "http://endpoint1.com"}, subscriber {url = "https://end.point.com/2"}])
+addSubscribers :: Client -> QueueName -> [Subscriber] -> IO IRonResponse
+addSubscribers client test_queue [subscriber {url = "http://endpoint1.com"}, subscriber {url = "https://end.point.com/2"}])
 ```
 
 ### Remove subscribers from a push queue
 
 ```haskell
--- | removeSubscribers client queueName [subscribers]
+removeSubscribers :: Client -> QueueName -> [Subscriber]
 main = removeSubscribers client "test_queue" [subscriber {url = "http://endpoint1.com"}, subscriber {url ="https://end.point.com/2"})
 ```
 
 ### Get the push statuses of a message
 
 ```haskell
--- | getMessagePushStatuses client queueName messageID
-main = getMessagePushStatuses client "test_queue" "123456789abcdef" -- subscriberList {subscribers = [Subscriber {retriesDelay = Just 60, retriesRemaining" = Just 2, statusCode = Just 200, status = Just "deleted", "url": "http://endpoint1.com", "id": "52.."}, ...]}
+getMessagePushStatuses :: Client -> QueueName -> ID -> IO SubscriberList
+getMessagePushStatuses client "test_queue" "123456789abcdef"
+{-
+    subscriberList {
+    subscribers = [Subscriber {retriesDelay = Just 60, retriesRemaining" = Just 2, statusCode = Just 200, status = Just "deleted", "url": "http://endpoint1.com", "id": "52.."}, ...]}
+-}
 ```
 
 ### Delete a pushed message
@@ -211,7 +224,7 @@ main = getMessagePushStatuses client "test_queue" "123456789abcdef" -- subscribe
 If you respond with a 202 status code, the pushed message will be reserved, not deleted, and should be manually deleted. You can get the message ID and subscriber ID from the push message's headers.
 
 ```haskell
--- deleteMessagePushStatus client queueName messageID subscriberID
+deleteMessagePushStatus :: Client -> QueueName -> MessageID -> [SuscriberID] -> IO IronResponse
 main = deleteMessagePushStatus client "test_queue" "123456789abcdef" "987654321fedcba"
 ```
 
@@ -222,22 +235,22 @@ main = deleteMessagePushStatus client "test_queue" "123456789abcdef" "987654321f
 ```haskell
 fixed_desc_alert = alert {type = "fixed", direction = "desc", trigger = 1000}
 progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger= 10000}
--- | addAlerts client queue [alerts]
-main = addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
+addAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
+addAlerts client "test_queue" ([fixed_desc_alert, progressive_asc_alert])
 ```
 
 ### Update alerts in a queue
 
 ```haskell
 progressive_asc_alert = alert {type = "progressive", direction = "asc", trigger = 5000, queue = "q"}
--- | updateAlerts client queue [alerts]
-main = updateAlerts client "test_queue" ([progressive_asc_alert])
+updateAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
+updateAlerts client "test_queue" ([progressive_asc_alert])
 ```
 
 ### Remove alerts from a queue
 
 ```haskell
--- | removeAlerts client queue [alertIDs]
+removeAlerts :: Client -> QueueName -> [AlertID] -> IO IronResponse
 main = removeAlerts client "test_queue" (['5305d3b5a3e920763013c796', '513015d32b5a3e763013c796'])
 ```
 
