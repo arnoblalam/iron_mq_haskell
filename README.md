@@ -48,7 +48,7 @@ myQueue = getQueue client "test_queue"
 We can change the default options of a message like so:
 
 ```haskell
--- | postMessage :: Client -> QueueName -> [Message] -> IO IronResponse
+postMessage :: Client -> QueueName -> [Message] -> IO IronResponse
 main = postMessages client "queueName" [message {body = "message1"}, message {body = "message2"}]
 ```
 
@@ -68,7 +68,7 @@ main = postMessage "queueName" [unorthodoxMessage]
 ### Pop messages off the queue
 
 ```haskell
--- | getMessages :: Client -> QueueName -> IO MessageList
+getMessages :: Client -> QueueName -> IO MessageList
 main = getMessages client "queneName"
 {- 
 MessageList 
@@ -85,8 +85,11 @@ It will eventually go back onto the queue after a timeout if you don't delete it
 
 ### Get message by id
 ```haskell
--- | getMessage client queueName messageID
-main = getMessageById client "test_queue" "1234567789abcdef" -- Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
+getMessageByID Client -> QueueName -> ID -> IO Message
+main = getMessageById client "test_queue" "1234567789abcdef"
+{-
+    Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
+-}
 ```
 
 ### Delete messages from the queue
