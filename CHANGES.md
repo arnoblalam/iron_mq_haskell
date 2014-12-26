@@ -1,14 +1,14 @@
 # Changes
 
-# Version 0.1.1.0
+## Version 0.1.1.0
 
-## Major
+### Major
 
 - Rename package from iron-mq-haskell to iron-mq
 - Implement `postMessages`, `deleteMessage`, `deleteQueue` `peek` and `touch`functions
 - Provide a default constructor for messages
 
-## Minor
+### Minor
 
  - Prettify iron-mq.cabal
  - Prettify postJSONWithBody function
