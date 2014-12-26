@@ -85,7 +85,7 @@ It will eventually go back onto the queue after a timeout if you don't delete it
 
 ### Get message by id
 ```haskell
-getMessageByID Client -> QueueName -> ID -> IO Message
+getMessageByID :: Client -> QueueName -> ID -> IO Message
 main = getMessageById client "test_queue" "1234567789abcdef"
 {-
     Message {mId = Just "...", mBody = "Hey yo!", mTimeout = Just 60, mReservedCount = Just 1}
