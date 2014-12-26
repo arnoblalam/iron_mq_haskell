@@ -4,7 +4,7 @@ module Network.IronMQ (module Network.IronMQ, Network.IronMQ.Types.Client(..)) w
 import Network.Wreq
 import Network.Wreq.Types (Postable)
 import Control.Lens
-import Data.Aeson (FromJSON)
+import Data.Aeson (FromJSON, ToJSON, toJSON)
 import Data.Text (Text, append, unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.IronMQ.Types
@@ -56,7 +56,7 @@ postJSONWithBody client endpoint body = do
 
 -- | Make a POST request to an endpoint using the connection into from client
 -- and an empty body. Returb the JSON response.
-postJSON :: FromJSON b => Client -> Endpoint -> IO b
+postJSON :: (ToJSON b, FromJSON b) => Client -> Endpoint -> IO b
 postJSON client endpoint = postJSONWithBody client endpoint emptyBody
 
 -- | Get a list of queues available to the client
