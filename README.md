@@ -39,7 +39,8 @@ returns list of queue names available to the client
 we get a specific queue by name:
 
 ```haskell
-myQueue = queue client "test_queue"
+getQueue :: Client -> QueueName -> IO Queue
+myQueue = getQueue client "test_queue"
 ```
 
 ### Push messages on the queue
@@ -47,7 +48,8 @@ myQueue = queue client "test_queue"
 We can change the default options of a message like so:
 
 ```haskell
-main = postMessage "queueName" [message {body = "message1"}, message {body = "message2"}]
+-- | postMessage :: Client -> QueueName -> [Message] -> IO IronResponse
+main = postMessages client "queueName" [message {body = "message1"}, message {body = "message2"}]
 ```
 
 We can change the default settings for a message like so:
@@ -66,8 +68,14 @@ main = postMessage "queueName" [unorthodoxMessage]
 ### Pop messages off the queue
 
 ```haskell
--- | getMessage queueName max timeout
-main = getMessages "queneName" 100 (Just 10) -- MessageList {messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]}
+-- | getMessages :: Client -> QueueName -> IO MessageList
+main = getMessages client "queneName"
+{- 
+MessageList 
+    {
+        messages = [Message {mId = Just "...", mBody = "Word up!", mTimeout = Just 60, mReservedCount = Just 1}]
+    }
+-}
 ```
 
 Set max to the number of messages to return, 1 by default. A `timeout` parameter can be used to specify a per-message timeout, or the timeout the message was posted with will be used.
