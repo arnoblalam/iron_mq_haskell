@@ -1,8 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Network.IronMQ (
-    module Network.IronMQ,
     Client(..),
-    message
+    queue,
+    message,
+    queues,
+    getQueue,
+    getMessages',
+    getMessages,
+    getMessageById,
+    postMessages,
+    clear,
+    deleteQueue,
+    deleteMessage,
+    peek',
+    peek,
+    touch,
+    release,
+    update
 ) where
 
 import Network.Wreq
@@ -17,8 +31,6 @@ import Network.HTTP.Client (RequestBody(..))
 
 
 -- * Some type synonyms to help keel track of things
-
-type Url = Text
 
 type Endpoint = Text
 
