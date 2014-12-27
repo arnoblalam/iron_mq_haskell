@@ -8,7 +8,8 @@ module Network.IronMQ (module
 import Network.Wreq
 import Network.Wreq.Types (Postable)
 import Control.Lens
-import Data.Aeson (FromJSON, ToJSON, toJSON)
+import Data.Aeson (FromJSON, toJSON)
+import Data.Map (fromList, Map)
 import Data.Text (Text, append, unpack, pack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.IronMQ.Types
@@ -65,7 +66,7 @@ postJSONWithBody client endpoint body = do
 
 -- | Make a POST request to an endpoint using the connection into from client
 -- and an empty body. Returb the JSON response.
-postJSON :: (ToJSON b, FromJSON b) => Client -> Endpoint -> IO b
+postJSON :: (FromJSON b) => Client -> Endpoint -> IO b
 postJSON client endpoint = postJSONWithBody client endpoint emptyBody
 
 {-
@@ -101,9 +102,9 @@ getQueue client queueName = getJSON client ("/queues/" `append` queueName)
 
 -- | Get a list of messages on the queue (allowing specification of number of messages and delay)
 getMessages' :: Client -> QueueName -> Maybe Int -> Maybe Int -> IO MessageList
-getMessages' client queueName max timeout = getJSONWithOpts client endpoint params where
+getMessages' client queueName max_ timeout = getJSONWithOpts client endpoint params' where
     endpoint = ("/queues/" `append` queueName `append` "/messages")
-    params = case (max, timeout) of
+    params' = case (max_, timeout) of
                 (Nothing, Nothing)      ->      []
                 (Just x, Nothing)       ->      [("n", pack (show x))]
                 (Nothing, Just y)       ->      [("wait", pack (show y))]
@@ -117,21 +118,22 @@ getMessages client queueName = getMessages' client queueName Nothing Nothing
 getMessageById :: Client -> QueueName -> ID -> IO Message
 getMessageById client queueName messageID = getJSON client
     ("/queues/" `append` queueName `append` "/messages/" `append` messageID)
-
+{-
 -- | Get the push status of a message
 getMessagePushStatus :: Client -> QueueName -> ID -> IO PushStatus
 getMessagePushStatus client queueName messageID = undefined
-
+-}
 -- | Post messages to a queue
 postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
-postMessages client queueName messages = postJSONWithBody client endpoint body where
+postMessages client queueName messages_ = postJSONWithBody client endpoint body where
         endpoint = "/queues/" `append` queueName `append` "/messages"
-        body = toJSON (MessageList {messages = messages})
+        body = toJSON (MessageList {messages = messages_})
 
 
 -- | Clear all messages from a queue
 clear :: Client -> QueueName -> IO IronResponse
-clear client queueName = postJSON client ("/queues/" `append` queueName  `append` "/clear")
+clear client queueName = postJSON client endpoint where
+    endpoint = "/queues/" `append` queueName  `append` "/clear"
 
 -- | Delete a queue
 deleteQueue :: Client -> QueueName -> IO IronResponse
@@ -147,7 +149,7 @@ deleteMessage client queueName messageID = deleteJSON client endpoint where
 -- | Delete several messages from a queue
 deleteMessages :: Client -> QueueName -> [ID] -> IO IronResponse
 deleteMessages client queueName meessageIDs = deleteJSON client endpoint
--}
+
 
 -- | Delete the message push status of a message
 deleteMessagePushStatus :: Client -> QueueName -> ID -> IO IronResponse
@@ -163,11 +165,12 @@ deleteAlert client queueName alertID = undefined
 
 -- Remove subscribers from a queue
 deleteSubscribers client queueName subscribers = undefined
+-}
 
 -- | Take a look at the next item on the queue
 peek' :: Client -> QueueName -> Maybe Int -> IO MessageList
-peek' client queueName max = getJSONWithOpts client endpoint opts where
-        opts = case max of
+peek' client queueName max_ = getJSONWithOpts client endpoint opts where
+        opts = case max_ of
                 Nothing -> []
                 Just x -> [("n", pack (show x))]
         endpoint = "/queues/" `append` queueName `append` "/messages/peek"
@@ -180,13 +183,24 @@ touch :: Client -> QueueName -> ID -> IO IronResponse
 touch client queueName messageID = postJSON client endpoint where
         endpoint = "/queues/" `append` queueName `append` "/messages/" `append` pack (show messageID) `append` "/touch"
 
--- | Update a queues subscribers
-update :: Client -> QueueName -> [Subscriber] -> IO IronResponse
-update client queueName subscribers = undefined
+-- | Release a reserved meesage
+release :: Client -> QueueName -> ID -> Maybe Int -> IO IronResponse
+release client queueName messageID delay = postJSONWithBody client endpoint body where
+        endpoint = "/queues/" `append` queueName `append` "/messages/" `append` pack (show messageID) `append` "/release"
+        body = case delay of
+                Nothing -> toJSON $ (fromList []::Map Text Int)
+                Just x -> toJSON $ (fromList [("delay", x)]::Map Text Int)
 
+-- | Update a queue.
+update :: Client -> QueueName -> Queue -> IO IronResponse
+update client queueName queue_ = postJSONWithBody client endpoint body where
+        endpoint = "/queues/" `append` queueName
+        body = toJSON queue_
+{-
 -- | Add alerts to a queue
 addAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
-addAlerts client queueName alerts = undefined
+addAlerts client queueName alerts = postJSONWithBody client endpoint where
+    endpoint = "/queues/" `append` queueName `append` 
 
 -- | Update alerts on a queue
 updateAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
@@ -195,3 +209,4 @@ updateAlerts client queueName alerts = undefined
 -- | Add subscribers to a queue
 addSubscribers :: Client -> QueueName -> [Subscriber] -> IO IronResponse
 addSubscribers client queueName subscribers = undefined
+-}
