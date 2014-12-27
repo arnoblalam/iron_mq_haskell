@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Network.IronMQ (module
-        Network.IronMQ, 
-        Client(..),
-        message
-        ) where
+module Network.IronMQ (
+    module Network.IronMQ,
+    Client(..),
+    message
+) where
 
 import Network.Wreq
 import Network.Wreq.Types (Postable)
@@ -73,8 +73,8 @@ postJSON client endpoint = postJSONWithBody client endpoint emptyBody
 deleteJSONWithBody :: (Postable a, FromJSON b) => Client ->Endpoint -> Postable a -> IO b
 deleteJSONWithBody client endpoint body = do
         let url = baseurl client `append` endpoint
-            deleteOpts = defaults 
-                & header "Content-Type" .~ ["application/json"] 
+            deleteOpts = defaults
+                & header "Content-Type" .~ ["application/json"]
                 & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
         response <- asJSON =<< deleteWith deleteOpts (unpack url)
         return (response ^. responseBody)
@@ -83,8 +83,8 @@ deleteJSONWithBody client endpoint body = do
 deleteJSON :: FromJSON a => Client ->Endpoint -> IO a
 deleteJSON client endpoint = do
         let url = baseurl client `append` endpoint
-            deleteOpts = defaults 
-                & header "Content-Type" .~ ["application/json"] 
+            deleteOpts = defaults
+                & header "Content-Type" .~ ["application/json"]
                 & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
         response <- asJSON =<< deleteWith deleteOpts (unpack url)
         return (response ^. responseBody)
@@ -127,7 +127,7 @@ getMessagePushStatus client queueName messageID = undefined
 postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
 postMessages client queueName messages_ = postJSONWithBody client endpoint body where
         endpoint = "/queues/" `append` queueName `append` "/messages"
-        body = toJSON MessageList {messages = messages_}
+        body = toJSON MessageList {mlMessages = messages_}
 
 
 -- | Clear all messages from a queue
@@ -200,7 +200,7 @@ update client queueName queue_ = postJSONWithBody client endpoint body where
 -- | Add alerts to a queue
 addAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
 addAlerts client queueName alerts = postJSONWithBody client endpoint where
-    endpoint = "/queues/" `append` queueName `append` 
+    endpoint = "/queues/" `append` queueName `append`
 
 -- | Update alerts on a queue
 updateAlerts :: Client -> QueueName -> [Alert] -> IO IronResponse
