@@ -103,7 +103,7 @@ getQueue client queueName = getJSON client ("/queues/" `append` queueName)
 -- | Get a list of messages on the queue (allowing specification of number of messages and delay)
 getMessages' :: Client -> QueueName -> Maybe Int -> Maybe Int -> IO MessageList
 getMessages' client queueName max_ timeout = getJSONWithOpts client endpoint params' where
-    endpoint = ("/queues/" `append` queueName `append` "/messages")
+    endpoint = "/queues/" `append` queueName `append` "/messages"
     params' = case (max_, timeout) of
                 (Nothing, Nothing)      ->      []
                 (Just x, Nothing)       ->      [("n", pack (show x))]
@@ -127,7 +127,7 @@ getMessagePushStatus client queueName messageID = undefined
 postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
 postMessages client queueName messages_ = postJSONWithBody client endpoint body where
         endpoint = "/queues/" `append` queueName `append` "/messages"
-        body = toJSON (MessageList {messages = messages_})
+        body = toJSON MessageList {messages = messages_}
 
 
 -- | Clear all messages from a queue
@@ -188,8 +188,8 @@ release :: Client -> QueueName -> ID -> Maybe Int -> IO IronResponse
 release client queueName messageID delay = postJSONWithBody client endpoint body where
         endpoint = "/queues/" `append` queueName `append` "/messages/" `append` pack (show messageID) `append` "/release"
         body = case delay of
-                Nothing -> toJSON $ (fromList []::Map Text Int)
-                Just x -> toJSON $ (fromList [("delay", x)]::Map Text Int)
+                Nothing -> toJSON (fromList []::Map Text Int)
+                Just x -> toJSON (fromList [("delay", x)]::Map Text Int)
 
 -- | Update a queue.
 update :: Client -> QueueName -> Queue -> IO IronResponse
