@@ -49,6 +49,19 @@ instance FromJSON Subscriber where
         v .:? "id"
     parseJSON _ = mzero
 
+instance ToJSON Subscriber
+
+-- | A default constructor for a subscriber
+subscriber :: Subscriber
+subscriber = Subscriber {
+    sUrl = "",
+    sRetriesRemaining = Nothing,
+    sHeaders = Nothing,
+    sStatusCode = Nothing,
+    sStatus = Nothing,
+    sId = Nothing
+}
+
 
 data Queue = Queue {
         qId :: Maybe Text,
@@ -60,7 +73,21 @@ data Queue = Queue {
         qRetries :: Maybe Int,
         qPushType :: Maybe Text,
         qRetriesDelay :: Maybe Int
-} deriving (Show)
+} deriving (Show, Generic)
+
+-- | A default constructor for a queue
+queue :: Queue
+queue = Queue {
+    qId = Nothing,
+    qProjectId = "",
+    qName = "",
+    qSize = Nothing,
+    qTotalMessages = Nothing,
+    qSubscribers = Nothing,
+    qRetries = Nothing,
+    qPushType = Nothing,
+    qRetriesDelay = Nothing
+}
 
 instance FromJSON Queue where
         parseJSON (Object v) = Queue <$>
@@ -74,6 +101,8 @@ instance FromJSON Queue where
                 v .:? "push_type" <*>
                 v .:? "retries_delay"
         parseJSON _ = mzero
+
+instance ToJSON Queue
 
 data QueueInfo = QueueInfo {
         qiSize :: Int
@@ -132,8 +161,6 @@ instance FromJSON IronResponse where
                 v .:? "ids" <*>
                 v .: "msg"
         parseJSON _ = mzero
-
-instance ToJSON IronResponse
 
 data Alert = Alert {
         aType :: Text, 
