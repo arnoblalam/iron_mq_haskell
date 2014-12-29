@@ -4,6 +4,7 @@
 module Network.IronMQ.Types where
 
 import Data.Aeson.TH
+import Data.Aeson.Types (camelTo)
 import Data.Text (Text)
 import Data.Char (toLower)
 
@@ -20,7 +21,7 @@ data QueueSummary = QueueSummary {
         qsName :: Text
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''QueueSummary)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 3.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''QueueSummary)
 
 
 data Subscriber = Subscriber {
@@ -32,7 +33,7 @@ data Subscriber = Subscriber {
     sId :: Maybe Text
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 1.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''Subscriber)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''Subscriber)
 
 data Queue = Queue {
         qId :: Maybe Text,
@@ -46,13 +47,13 @@ data Queue = Queue {
         qRetriesDelay :: Maybe Int
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 1.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''Queue)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''Queue)
 
 data PushStatus = PushStatus {
     psSubscribers :: [Subscriber]
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''PushStatus)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 3.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''PushStatus)
 
 data Message = Message {
         mId :: Maybe Text,
@@ -61,20 +62,20 @@ data Message = Message {
         mReservedCount :: Maybe Int
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 1.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''Message)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''Message)
 
 data MessageList = MessageList {
         mlMessages :: [Message]
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''MessageList)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 3.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''MessageList)
 
 data IronResponse = IronResponse {
         irIds :: Maybe [Text],
         irMsg :: Text
 } deriving (Show)
 
-$(deriveFromJSON defaultOptions{fieldLabelModifier = drop 2.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''IronResponse)
+$(deriveFromJSON defaultOptions{fieldLabelModifier = drop 3.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''IronResponse)
 
 data Alert = Alert {
         aType :: Text,
@@ -84,7 +85,7 @@ data Alert = Alert {
         aSnooze::Maybe Int
 } deriving (Show)
 
-$(deriveJSON defaultOptions{fieldLabelModifier = drop 1.map toLower, constructorTagModifier = map toLower, omitNothingFields = True} ''Alert)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 2.camelTo '_', constructorTagModifier = map toLower, omitNothingFields = True} ''Alert)
 
 -- * Some default constructors for convinience
 

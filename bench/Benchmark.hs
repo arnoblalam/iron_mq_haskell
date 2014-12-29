@@ -22,7 +22,7 @@ doStuff = do
     _ <- queues testClient
     postMessages testClient "default" [message{mBody = "This is message number "}]
     messageList <- getMessages testClient "default"
-    let messageID = mId (head (messages messageList))
+    let messageID = mId (head (mlMessages messageList))
     case messageID of
         Just x -> deleteMessage testClient "default" x
     return ()
