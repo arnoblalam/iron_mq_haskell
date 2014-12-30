@@ -10,8 +10,8 @@ main = defaultMain [bench "get queue info, post a message, get messages, delete 
 
 testClient :: Client
 testClient = Client {
-    token = "_B6KOfA16D4AmW2NwSCw12mgVxk",
-    projectID = "53f691bd45d4960005000082",
+    token = "DG0HDEUlDvj-oyTdM9Ua9rTxw7w",
+    projectID = "54a241faaeffe60005000047",
     server = "mq-aws-us-east-1.iron.io",
     apiVersion = "1"
 }

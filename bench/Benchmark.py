@@ -1,8 +1,8 @@
 from iron_mq import *
 
 testClient = IronMQ(host="mq-aws-us-east-1.iron.io",
-    project_id="53f691bd45d4960005000082",
-    token="_B6KOfA16D4AmW2NwSCw12mgVxk",
+    project_id="54a241faaeffe60005000047",
+    token="DG0HDEUlDvj-oyTdM9Ua9rTxw7w",
     protocol="https", port=443,
     api_version=1,
     config_file=None)
