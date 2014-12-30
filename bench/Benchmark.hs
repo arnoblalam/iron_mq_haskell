@@ -3,6 +3,7 @@
 import Criterion.Main
 
 import Network.IronMQ
+import qualified Network.Wreq.Session as S
 import Network.IronMQ.Types
 
 main :: IO ()
@@ -18,11 +19,11 @@ testClient = Client {
 
 
 doStuff :: IO ()
-doStuff = do
-    _ <- queues testClient
-    postMessages testClient "default" [message{mBody = "This is message number "}]
-    messageList <- getMessages testClient "default"
+doStuff = S.withSession $ \sess-> do
+    _ <- queues testClient sess
+    postMessages testClient sess "default" [message{mBody = "This is message number "}]
+    messageList <- getMessages testClient sess "default"
     let messageID = mId (head (mlMessages messageList))
     case messageID of
-        Just x -> deleteMessage testClient "default" x
+        Just x -> deleteMessage testClient sess "default" x
     return ()
