@@ -24,7 +24,7 @@ import Network.Wreq.Types (Postable)
 import Control.Lens
 import Data.Aeson (FromJSON, toJSON)
 import Data.Map (fromList, Map)
-import Data.Text (Text, append, unpack, pack)
+import Data.Text (Text, unpack, pack, concat)
 import Data.Text.Encoding (encodeUtf8)
 import Network.IronMQ.Types
 import Network.HTTP.Client (RequestBody(..))
@@ -44,8 +44,8 @@ type ID = Text -- could be a message ID, subscriber ID or whatever
 
 -- | Construct a base URL for HTTP requests from a client
 baseurl :: Client -> Text
-baseurl client = "https://" `append` server client `append` "/" `append` apiVersion client
-                            `append` "/projects/" `append` projectID client
+baseurl client = Data.Text.concat ["https://", server client,  "/", apiVersion client
+                           , "/projects/", projectID client]
 -- | An empty body for POST/PUT requests
 emptyBody :: Payload
 emptyBody = Raw "application/json" $ RequestBodyLBS ""
@@ -54,7 +54,7 @@ emptyBody = Raw "application/json" $ RequestBodyLBS ""
 -- query string set to parameters. Return the JSON results
 getJSONWithOpts :: FromJSON a => Client -> Endpoint -> [Param] -> IO a
 getJSONWithOpts client endpoint parameters = do
-    let url = baseurl client `append` endpoint
+    let url = Data.Text.concat [baseurl client, endpoint]
         getOpts = defaults & header "Content-Type" .~ ["application/json"]
                            & params .~ ("oauth", token client) : parameters
     response <- asJSON =<< getWith getOpts (unpack url)
@@ -69,10 +69,10 @@ getJSON client s = getJSONWithOpts client s []
 -- and the body provided. Return the JSON response.
 postJSONWithBody :: (Postable a, FromJSON b) => Client -> Endpoint -> a -> IO b
 postJSONWithBody client endpoint body = do
-    let url = baseurl client `append` endpoint
+    let url = Data.Text.concat [baseurl client, endpoint]
         postOpts = defaults
                 & header "Content-Type" .~ ["application/json"]
-                & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
+                & header "Authorization" .~ [encodeUtf8 (Data.Text.concat ["OAuth ", token client])]
     response <- asJSON =<< postWith postOpts (unpack url) body
     return (response ^. responseBody)
 
@@ -94,10 +94,10 @@ deleteJSONWithBody client endpoint body = do
 
 deleteJSON :: FromJSON a => Client ->Endpoint -> IO a
 deleteJSON client endpoint = do
-        let url = baseurl client `append` endpoint
+        let url = Data.Text.concat [baseurl client, endpoint]
             deleteOpts = defaults
                 & header "Content-Type" .~ ["application/json"]
-                & header "Authorization" .~ [encodeUtf8 ("OAuth " `append` token client)]
+                & header "Authorization" .~ [encodeUtf8 (Data.Text.concat ["OAuth ", token client])]
         response <- asJSON =<< deleteWith deleteOpts (unpack url)
         return (response ^. responseBody)
 
@@ -109,13 +109,13 @@ queues client = getJSON client "/queues"
 
 -- | Get a queue from the client
 getQueue :: Client -> QueueName -> IO Queue
-getQueue client queueName = getJSON client ("/queues/" `append` queueName)
+getQueue client queueName = getJSON client (Data.Text.concat ["/queues/", queueName])
 
 
 -- | Get a list of messages on the queue (allowing specification of number of messages and delay)
 getMessages' :: Client -> QueueName -> Maybe Int -> Maybe Int -> IO MessageList
 getMessages' client queueName max_ timeout = getJSONWithOpts client endpoint params' where
-    endpoint = "/queues/" `append` queueName `append` "/messages"
+    endpoint = Data.Text.concat ["/queues/", queueName, "/messages"]
     params' = case (max_, timeout) of
                 (Nothing, Nothing)      ->      []
                 (Just x, Nothing)       ->      [("n", pack (show x))]
@@ -129,7 +129,7 @@ getMessages client queueName = getMessages' client queueName Nothing Nothing
 -- | Get a message by ID
 getMessageById :: Client -> QueueName -> ID -> IO Message
 getMessageById client queueName messageID = getJSON client
-    ("/queues/" `append` queueName `append` "/messages/" `append` messageID)
+    (Data.Text.concat ["/queues/", queueName, "/messages/", messageID])
 {-
 -- | Get the push status of a message
 getMessagePushStatus :: Client -> QueueName -> ID -> IO PushStatus
@@ -138,24 +138,24 @@ getMessagePushStatus client queueName messageID = undefined
 -- | Post messages to a queue
 postMessages :: Client -> QueueName -> [Message] -> IO IronResponse
 postMessages client queueName messages_ = postJSONWithBody client endpoint body where
-        endpoint = "/queues/" `append` queueName `append` "/messages"
+        endpoint = Data.Text.concat ["/queues/", queueName, "/messages"]
         body = toJSON MessageList {mlMessages = messages_}
 
 
 -- | Clear all messages from a queue
 clear :: Client -> QueueName -> IO IronResponse
 clear client queueName = postJSON client endpoint where
-    endpoint = "/queues/" `append` queueName  `append` "/clear"
+    endpoint = Data.Text.concat ["/queues/", queueName , "/clear"]
 
 -- | Delete a queue
 deleteQueue :: Client -> QueueName -> IO IronResponse
 deleteQueue client queueName = deleteJSON client endpoint where
-        endpoint = "/queues/" `append` queueName
+        endpoint = Data.Text.concat ["/queues/", queueName]
 
 -- | Delete a message from a queue
 deleteMessage :: Client -> QueueName -> ID -> IO IronResponse
 deleteMessage client queueName messageID = deleteJSON client endpoint where
-        endpoint = "/queues/" `append` queueName `append` "/messages/" `append` messageID
+        endpoint = Data.Text.concat ["/queues/", queueName, "/messages/", messageID]
 
 {-
 -- | Delete several messages from a queue
@@ -185,7 +185,7 @@ peek' client queueName max_ = getJSONWithOpts client endpoint opts where
         opts = case max_ of
                 Nothing -> []
                 Just x -> [("n", pack (show x))]
-        endpoint = "/queues/" `append` queueName `append` "/messages/peek"
+        endpoint = Data.Text.concat ["/queues/", queueName, "/messages/peek"]
 
 peek :: Client -> QueueName -> IO MessageList
 peek client queueName = peek' client queueName Nothing
@@ -193,12 +193,12 @@ peek client queueName = peek' client queueName Nothing
 -- | Touch a message on the queue
 touch :: Client -> QueueName -> ID -> IO IronResponse
 touch client queueName messageID = postJSON client endpoint where
-        endpoint = "/queues/" `append` queueName `append` "/messages/" `append` pack (show messageID) `append` "/touch"
+        endpoint = Data.Text.concat ["/queues/", queueName, "/messages/", pack (show messageID), "/touch"]
 
 -- | Release a reserved meesage
 release :: Client -> QueueName -> ID -> Maybe Int -> IO IronResponse
 release client queueName messageID delay = postJSONWithBody client endpoint body where
-        endpoint = "/queues/" `append` queueName `append` "/messages/" `append` pack (show messageID) `append` "/release"
+        endpoint = Data.Text.concat ["/queues/", queueName, "/messages/", pack (show messageID), "/release"]
         body = case delay of
                 Nothing -> toJSON (fromList []::Map Text Int)
                 Just x -> toJSON (fromList [("delay", x)]::Map Text Int)
@@ -206,7 +206,7 @@ release client queueName messageID delay = postJSONWithBody client endpoint body
 -- | Update a queue.
 update :: Client -> QueueName -> Queue -> IO IronResponse
 update client queueName queue_ = postJSONWithBody client endpoint body where
-        endpoint = "/queues/" `append` queueName
+        endpoint = Data.Text.concat ["/queues/", queueName]
         body = toJSON queue_
 {-
 -- | Add alerts to a queue
